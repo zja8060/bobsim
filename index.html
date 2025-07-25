@@ -428,6 +428,13 @@ table.calendar th{background:var(--blue);color:#fff;font-weight:600;}
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
+    // 아래 코드가 비밀번호 창을 띄웁니다
+    if(prompt("비밀번호를 입력하세요") !== "king8055"){
+      alert("접근 불가입니다!");
+      location.href="https://www.google.com"; // 틀리면 강제 이동
+    }
+  </script>
+<script>
 /********** DATA **********/
 let customerDB=[], productDB=[], holidays={}, checkedCustomers={}, billInfo={coName:'',manager:'',account:'',note:'',date:''};
 let rules=[], memoStore=[];
