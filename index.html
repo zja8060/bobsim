@@ -1858,10 +1858,6 @@ loadAllData();
 window.addEventListener('load', async ()=>{
   if(customerDB.length===0 && productDB.length===0 && Object.keys(holidays).length===0){
     if(window.showOpenFilePicker){
-      if(confirm('처음 실행 같습니다. 백업 파일에서 불러오시겠습니까?')){
-        await loadBackupFileManually();
-        return;
-      }
     }
   }
   renderAll();
