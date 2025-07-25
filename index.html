@@ -428,6 +428,52 @@ table.calendar th{background:var(--blue);color:#fff;font-weight:600;}
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
+// === GitHub 동기화 설정 ===
+const GITHUB_TOKEN = localStorage.getItem('GH_TOKEN') 
+  || prompt('GitHub Personal Access Token을 입력하세요.');
+localStorage.setItem('GH_TOKEN', GITHUB_TOKEN);
+
+const REPO_OWNER = 'your-username';    // 본인 GitHub 사용자명
+const REPO_NAME  = 'your-repo';        // 동기화용 리포지토리 이름
+const FILE_PATH  = 'lunchbox_data.json'; // 리포지토리 내 저장할 파일
+
+/** GitHub에서 JSON 불러오기 */
+async function loadFromGitHub(){
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `token ${GITHUB_TOKEN}` }
+  });
+  if (!res.ok) return;  // 파일이 없으면 그냥 넘어감
+  const { content, sha } = await res.json();
+  const data = JSON.parse(atob(content));
+  applyPayload(data);
+  saveAllData();
+  renderAll();
+  window._ghFileSha = sha;  // 이후 업데이트용 SHA 저장
+}
+
+/** GitHub에 JSON 저장(덮어쓰기) */
+async function saveToGitHub(){
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+  const payload = buildBackupPayload();
+  const body = {
+    message: "자동 동기화: lunchbox 데이터 업데이트",
+    content: btoa(JSON.stringify(payload, null, 2)),
+    sha: window._ghFileSha  // 최초엔 undefined여도 무방
+  };
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      Authorization: `token ${GITHUB_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  const json = await res.json();
+  if (json.content && json.content.sha) {
+    window._ghFileSha = json.content.sha;
+  }
+}
 /********** DATA **********/
 let customerDB=[], productDB=[], holidays={}, checkedCustomers={}, billInfo={coName:'',manager:'',account:'',note:'',date:''};
 let rules=[], memoStore=[];
@@ -472,7 +518,11 @@ function saveAllData(){
   localStorage.setItem('menuPool',JSON.stringify(menuPool));
   localStorage.setItem('menuMeta',JSON.stringify(menuMeta));
 }
-function commitData(){ saveAllData(); performAutoBackup(); }
+function commitData(){
+  saveAllData();
+  // localStorage에 저장 후 GitHub에도 동기화
+  saveToGitHub().catch(console.error);
+}
 
 /********** APPLY PAYLOAD **********/
 function applyPayload(o){
@@ -665,11 +715,33 @@ function openHolidayPopup(d){
 }
 function closeHolidayPopup(){ holidayPopup.style.display='none'; }
 function saveHoliday(){
-  if(!holidayDate) return;
-  const nm=holidayName.value.trim();
-  if(nm) holidays[holidayDate]=nm; else delete holidays[holidayDate];
-  commitData(); closeHolidayPopup(); renderCalendar(); renderMonthSales();
+  if (!holidayDate) return;
+  const nm = holidayName.value.trim();
+
+  if (nm) {
+    // 1) 공휴일 등록
+    holidays[holidayDate] = nm;
+
+    // 2) 기존 예약된 deliveryData에서 해당 날짜 배달 내역 삭제
+    customerDB.forEach(c => {
+      if (c.deliveryData && c.deliveryData[holidayDate]) {
+        delete c.deliveryData[holidayDate];
+      }
+    });
+
+  } else {
+    // 공휴일 삭제
+    delete holidays[holidayDate];
+  }
+
+  // 3) 데이터 저장 및 화면 갱신
+  commitData();
+  closeHolidayPopup();
+  renderCalendar();
+  renderDelivery();       // 추가된 배달 화면 갱신
+  renderMonthSales();
 }
+
 function deleteHoliday(){
   if(!holidayDate) return;
   delete holidays[holidayDate];
@@ -979,31 +1051,57 @@ function selectPopupDate(ds){ popupSelected=ds; renderPopupCal(); renderPopupPro
 function renderPopupProd(){ pmProd.innerHTML=productDB.map(p=>`<option>${p.name}</option>`).join(''); }
 function renderCustSummary(){
   if(currIdx==null) return;
-  const c=customerDB[currIdx];
-  const prefix=getPopupYM();
-  let productCounts={}, subtotal=0;
-  Object.keys(c.deliveryData||{}).forEach(date=>{
-    if(date.startsWith(prefix)){
-      c.deliveryData[date].forEach(it=>{
-        productCounts[it.name]=(productCounts[it.name]||0)+it.qty;
-        subtotal+=it.qty*getUnitPrice(c,it.name);
+  const c = customerDB[currIdx];
+  const prefix = getPopupYM();
+
+  // 1) 날짜별 집계 → 제품별 {name, qty} 배열로 변환
+  let lines = [];
+  Object.keys(c.deliveryData||{}).forEach(date => {
+    if (date.startsWith(prefix)) {
+      c.deliveryData[date].forEach(it => {
+        const exist = lines.find(l => l.name === it.name);
+        if (exist) exist.qty += it.qty;
+        else lines.push({ name: it.name, qty: it.qty });
       });
     }
   });
-  const vat=popupVatIncluded?Math.round(subtotal*0.1):0;
-  const display=subtotal+vat;
-  const productList=Object.entries(productCounts).sort((a,b)=>a[0].localeCompare(b[0]))
-        .map(([n,q])=>`<span>${n} × ${q}</span>`).join('');
-  popupMonthSummary.innerHTML=`
-    <b>${popupYearVal}년 ${popupMonthVal+1}월 제품별 수량</b>
-    <div class="summary-products" style="margin:6px 0 0;font-size:11px;line-height:1.3;column-count:2;column-gap:18px;">${productList||'<span style="color:#777;">(없음)</span>'}</div>
+
+  // 2) 단가(up)·금액(amount) 계산 및 소계 누적
+  let subtotal = 0;
+const productList = lines
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map(l => {
+    const up = getUnitPrice(c, l.name);
+    const amount = l.qty * up;
+    subtotal += amount;
+    return `
+      <div style="
+        font-size:13px;
+        margin:4px 0;
+      ">
+        ${l.name} × ${l.qty} @ ${up.toLocaleString()}원 = ${amount.toLocaleString()}원
+      </div>`;
+  })
+  .join('');
+
+  // 3) 부가세/표시금액
+  const vat = popupVatIncluded ? Math.round(subtotal * 0.1) : 0;
+  const display = subtotal + vat;
+
+  // 4) 출력
+  popupMonthSummary.innerHTML = `
+    <b>${popupYearVal}년 ${popupMonthVal+1}월 제품별 수량 및 단가</b>
+    <div class="summary-products" style="margin:6px 0 0;
+         font-size:11px;line-height:1.3;column-count:2;column-gap:18px;">
+      ${productList||'<span style="color:#777;">(없음)</span>'}
+    </div>
     <div style="margin-top:6px;">
       소계: <b>${subtotal.toLocaleString()}</b> 원<br>
       부가세: <b>${vat.toLocaleString()}</b> 원<br>
-      표시 금액: <b>${display.toLocaleString()}</b> 원 ${popupVatIncluded?'(부가세포함)':'(부가세미포함)'}
+      표시 금액: <b>${display.toLocaleString()}</b> 원 
+      ${popupVatIncluded?'(부가세포함)':'(부가세미포함)'}
     </div>`;
 }
-
 /* 고객 전용 단가 관리 UI */
 function renderPopupPriceTable(){
   const c = customerDB[currIdx];
@@ -1057,88 +1155,133 @@ function shouldApplyDay(w, isHol, selectedDays){
   return selectedDays.includes(w);
 }
 function pmDayAdd(){
-  const prod=pmProd.value, qty=+pmQty.value;
-  const dd=customerDB[currIdx].deliveryData;
-  dd[popupSelected]=dd[popupSelected]||[];
-  let ent=dd[popupSelected].find(it=>it.name===prod);
-  if(ent) ent.qty+=qty; else dd[popupSelected].push({name:prod,qty});
-  commitData(); renderPopupCal(); renderDelivery(); renderCustSummary(); renderMonthSales();
-  rebuildMainCalendarCell(popupSelected); buildBillPopupCustomersIfOpen();
+  // 1) 단가 입력 값이 있으면 자동 적용
+  const priceVal = document.getElementById('custPriceInput').value.trim();
+  if (priceVal !== '') applyCustomerPrice(pmProd.value);
+
+   const prod=pmProd.value, qty=+pmQty.value;
+   const dd=customerDB[currIdx].deliveryData;
+   dd[popupSelected]=dd[popupSelected]||[];
+   let ent=dd[popupSelected].find(it=>it.name===prod);
+   if(ent) ent.qty+=qty; else dd[popupSelected].push({name:prod,qty});
+   commitData(); renderPopupCal(); renderDelivery(); renderCustSummary(); renderMonthSales();
+   rebuildMainCalendarCell(popupSelected); buildBillPopupCustomersIfOpen();
 }
 function pmDayRemove(){
-  // 해당 날짜 모든 제품 제거
+  // 단가 입력 값이 있으면 자동 적용
+  const priceVal = document.getElementById('custPriceInput').value.trim();
+  if (priceVal !== '') applyCustomerPrice(pmProd.value);
+
+  const prod = pmProd.value;
   const dd = customerDB[currIdx].deliveryData;
-  if(dd[popupSelected]) delete dd[popupSelected];
+  if (dd[popupSelected]) delete dd[popupSelected];
   commitData();
-  renderPopupCal(); renderDelivery(); renderCustSummary(); renderMonthSales();
-  rebuildMainCalendarCell(popupSelected); buildBillPopupCustomersIfOpen();
+  renderPopupCal();
+  renderDelivery();
+  renderCustSummary();
+  renderMonthSales();
+  rebuildMainCalendarCell(popupSelected);
+  buildBillPopupCustomersIfOpen();
 }
 function pmAfterAdd(){
-  const prod=pmProd.value, qty=+pmQty.value, days=getWdays();
-  if(days.length===0){ alert('요일 또는 공휴일을 선택하세요.'); return; }
-  const startDate=new Date(popupSelected);
-  applyAddForRange(prod,qty,days,startDate,new Date(startDate.getFullYear()+3,11,31));
-  addRule('add', popupSelected, null, prod, qty, days);
-  commitData(); renderPopupCal(); renderDelivery(); renderCustSummary(); renderMonthSales();
-  rebuildMainCalendarRange(popupSelected); buildBillPopupCustomersIfOpen();
+  // 1) 단가 입력 값이 있으면 자동 적용
+  const priceVal = document.getElementById('custPriceInput').value.trim();
+  if (priceVal !== '') applyCustomerPrice(pmProd.value);
+
+   const prod=pmProd.value, qty=+pmQty.value, days=getWdays();
+   if(days.length===0){ alert('요일 또는 공휴일을 선택하세요.'); return; }
+   const startDate=new Date(popupSelected);
+   applyAddForRange(prod,qty,days,startDate,new Date(startDate.getFullYear()+3,11,31));
+   addRule('add', popupSelected, null, prod, qty, days);
+   commitData(); renderPopupCal(); renderDelivery(); renderCustSummary(); renderMonthSales();
+   rebuildMainCalendarRange(popupSelected); buildBillPopupCustomersIfOpen();
 }
 function pmAfterRemove(){
-  const prod=pmProd.value;
-  const days=getWdays(); // 요일 관계없이 제거 요구 -> 선택 없으면 전체 제거
-  const startDate=new Date(popupSelected);
-  const endDate=new Date(startDate.getFullYear()+3,11,31);
-  const dd=customerDB[currIdx].deliveryData;
+  // 단가 입력 값이 있으면 자동 적용
+  const priceVal = document.getElementById('custPriceInput').value.trim();
+  if (priceVal !== '') applyCustomerPrice(pmProd.value);
 
-  for(let d=new Date(startDate); d<=endDate; d.setDate(d.getDate()+1)){
-    const ds=formatDateLocal(d);
-    const w=d.getDay(); const isHol=!!holidays[ds];
-    if(days.length===0 || shouldApplyDay(w,isHol,days)){
-      dd[ds]=(dd[ds]||[]).filter(it=>it.name!==prod);
-      if(dd[ds] && !dd[ds].length) delete dd[ds];
+  const prod = pmProd.value;
+  const days = getWdays();
+  const startDate = new Date(popupSelected);
+  const endDate = new Date(startDate.getFullYear()+3,11,31);
+  const dd = customerDB[currIdx].deliveryData;
+
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate()+1)) {
+    const ds = formatDateLocal(d);
+    const w = d.getDay(), isHol = !!holidays[ds];
+    if (days.length===0 || shouldApplyDay(w, isHol, days)) {
+      dd[ds] = (dd[ds]||[]).filter(it=>it.name!==prod);
+      if (dd[ds] && !dd[ds].length) delete dd[ds];
     }
   }
   addRule('remove', popupSelected, null, prod, null, days.length?days:['ALL']);
-  commitData(); renderPopupCal(); renderDelivery(); renderCustSummary(); renderMonthSales();
-  rebuildMainCalendarRange(popupSelected); buildBillPopupCustomersIfOpen();
+  commitData();
+  renderPopupCal();
+  renderDelivery();
+  renderCustSummary();
+  renderMonthSales();
+  rebuildMainCalendarRange(popupSelected);
+  buildBillPopupCustomersIfOpen();
 }
 function showPeriod(mode){
   periodAddRow.style.display=mode==='add'?'block':'none';
   periodRemoveRow.style.display=mode==='remove'?'block':'none';
 }
 function pmPeriodAdd(){
-  const prod=pmProd.value, qty=+pmQty.value, days=getWdays();
-  const start=addStart.value, end=addEnd.value; if(!start||!end){ alert('기간 지정'); return; }
-  if(days.length===0){ alert('요일 또는 공휴일 선택'); return; }
-  const dd=customerDB[currIdx].deliveryData;
-  for(let d=new Date(start);d<=new Date(end);d.setDate(d.getDate()+1)){
-    const ds=formatDateLocal(d);
-    const w=d.getDay(); const isHol=!!holidays[ds];
-    if(shouldApplyDay(w,isHol,days)){
-      dd[ds]=dd[ds]||[];
-      let ent=dd[ds].find(it=>it.name===prod);
-      if(ent) ent.qty+=qty; else dd[ds].push({name:prod,qty});
+  // 단가 입력 값이 있으면 자동 적용
+  const priceVal = document.getElementById('custPriceInput').value.trim();
+  if (priceVal !== '') applyCustomerPrice(pmProd.value);
+
+  const prod = pmProd.value, qty = +pmQty.value, days = getWdays();
+  const start = addStart.value, end = addEnd.value;
+  if (!start || !end) { alert('기간 지정'); return; }
+  if (days.length===0) { alert('요일 또는 공휴일 선택'); return; }
+  const dd = customerDB[currIdx].deliveryData;
+  for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate()+1)) {
+    const ds = formatDateLocal(d);
+    const w = d.getDay(), isHol = !!holidays[ds];
+    if (shouldApplyDay(w, isHol, days)) {
+      dd[ds] = dd[ds]||[];
+      let ent = dd[ds].find(it=>it.name===prod);
+      if (ent) ent.qty += qty; else dd[ds].push({name:prod,qty});
     }
   }
   addRule('add', start, end, prod, qty, days);
-  commitData(); renderPopupCal(); renderDelivery(); renderCustSummary(); renderMonthSales();
-  rebuildMainCalendarRange(start,end); buildBillPopupCustomersIfOpen();
+  commitData();
+  renderPopupCal();
+  renderDelivery();
+  renderCustSummary();
+  renderMonthSales();
+  rebuildMainCalendarRange(start, end);
+  buildBillPopupCustomersIfOpen();
 }
 function pmPeriodRemove(){
-  const prod=pmProd.value, days=getWdays();
-  const start=rmStart.value, end=rmEnd.value; if(!start||!end){ alert('기간 지정'); return; }
-  if(days.length===0){ alert('요일 선택'); return; }
-  const dd=customerDB[currIdx].deliveryData;
-  for(let d=new Date(start);d<=new Date(end);d.setDate(d.getDate()+1)){
-    const ds=formatDateLocal(d);
-    const w=d.getDay(); const isHol=!!holidays[ds];
-    if(shouldApplyDay(w,isHol,days)){
-      dd[ds]=(dd[ds]||[]).filter(it=>it.name!==prod);
-      if(dd[ds] && !dd[ds].length) delete dd[ds];
+  // 단가 입력 값이 있으면 자동 적용
+  const priceVal = document.getElementById('custPriceInput').value.trim();
+  if (priceVal !== '') applyCustomerPrice(pmProd.value);
+
+  const prod = pmProd.value, days = getWdays();
+  const start = rmStart.value, end = rmEnd.value;
+  if (!start || !end) { alert('기간 지정'); return; }
+  if (days.length===0) { alert('요일 선택'); return; }
+  const dd = customerDB[currIdx].deliveryData;
+  for (let d = new Date(start); d <= new Date(end); d.setDate(d.getDate()+1)) {
+    const ds = formatDateLocal(d);
+    const w = d.getDay(), isHol = !!holidays[ds];
+    if (shouldApplyDay(w, isHol, days)) {
+      dd[ds] = (dd[ds]||[]).filter(it=>it.name!==prod);
+      if (dd[ds] && !dd[ds].length) delete dd[ds];
     }
   }
   addRule('remove', start, end, prod, null, days);
-  commitData(); renderPopupCal(); renderDelivery(); renderCustSummary(); renderMonthSales();
-  rebuildMainCalendarRange(start,end); buildBillPopupCustomersIfOpen();
+  commitData();
+  renderPopupCal();
+  renderDelivery();
+  renderCustSummary();
+  renderMonthSales();
+  rebuildMainCalendarRange(start, end);
+  buildBillPopupCustomersIfOpen();
 }
 function getWdays(){
   const arr=[...document.querySelectorAll('.wdChk')].filter(c=>c.checked).map(c=>+c.value);
@@ -1830,10 +1973,22 @@ function printMenu(){
     html+='</tr>';
   });
   html+='</tbody></table></div>';
-  printContainer.innerHTML=html;
+ // 1) 인쇄용으로 landscape @page 스타일 동적 추가
+  const landscapeStyle = document.createElement('style');
+  landscapeStyle.media = 'print';
+  landscapeStyle.textContent = '@page { size: landscape; }';
+  document.head.appendChild(landscapeStyle);
+
+  // 2) 인쇄 컨테이너 보여주고 인쇄 실행
+  printContainer.innerHTML = html;
   printContainer.classList.remove('hidden');
   window.print();
-  setTimeout(()=>printContainer.classList.add('hidden'),400);
+
+  // 3) 인쇄 후 스타일 제거 및 컨테이너 감추기
+  setTimeout(()=>{
+    document.head.removeChild(landscapeStyle);
+    printContainer.classList.add('hidden');
+  }, 500);
 }
 
 /********** INIT **********/
@@ -1846,17 +2001,9 @@ function renderAll(){
   }
   renderDelivery();
 }
-loadAllData();
-
 window.addEventListener('load', async ()=>{
-  if(customerDB.length===0 && productDB.length===0 && Object.keys(holidays).length===0){
-    if(window.showOpenFilePicker){
-      if(confirm('처음 실행 같습니다. 백업 파일에서 불러오시겠습니까?')){
-        await loadBackupFileManually();
-        return;
-      }
-    }
-  }
+  // GitHub에 저장된 데이터가 있으면 먼저 불러와서 로컬에 적용
+  await loadFromGitHub().catch(console.error);
   renderAll();
 });
 window.addEventListener('beforeunload', saveAllData);
