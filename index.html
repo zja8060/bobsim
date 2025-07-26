@@ -429,9 +429,23 @@ table.calendar th{background:var(--blue);color:#fff;font-weight:600;}
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 // === GitHub 동기화 설정 ===
-const GITHUB_TOKEN = localStorage.getItem('GH_TOKEN') 
-  || prompt('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');
-localStorage.setItem('GH_TOKEN', GITHUB_TOKEN);
+// 1) 진짜 메시지와 (선택적) 기본값(defaultValue)을 분리
+const stored = localStorage.getItem('GH_TOKEN');
+const inputToken = prompt(
+  'GitHub Personal Access Token을 입력하세요.',   // 물음표 메시지
+  stored || ''                                   // (옵션) 이전에 저장했던 토큰을 기본값으로 띄워줌
+);
+
+const GITHUB_TOKEN = inputToken?.trim() || stored; 
+// trim()으로 공백만 입력했을 때를 방지, 
+// 입력값이 없으면 stored(이전에 저장된 토큰)를 쓰도록
+
+if (GITHUB_TOKEN) {
+  localStorage.setItem('GH_TOKEN', GITHUB_TOKEN);
+} else {
+  console.warn('토큰이 설정되지 않아 GitHub 동기화가 비활성화됩니다.');
+}
+
 
 const REPO_OWNER = 'zja8060';    // 본인 GitHub 사용자명
 const REPO_NAME  = 'bobsim';        // 동기화용 리포지토리 이름
