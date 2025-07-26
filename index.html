@@ -428,66 +428,6 @@ table.calendar th{background:var(--blue);color:#fff;font-weight:600;}
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-// === GitHub 동기화 설정 ===
-// 1) 진짜 메시지와 (선택적) 기본값(defaultValue)을 분리
-const stored = localStorage.getItem('GH_TOKEN');
-const inputToken = prompt(
-  'GitHub Personal Access Token을 입력하세요.',   // 물음표 메시지
-  stored || ''                                   // (옵션) 이전에 저장했던 토큰을 기본값으로 띄워줌
-);
-
-const GITHUB_TOKEN = inputToken?.trim() || stored; 
-// trim()으로 공백만 입력했을 때를 방지, 
-// 입력값이 없으면 stored(이전에 저장된 토큰)를 쓰도록
-
-if (GITHUB_TOKEN) {
-  localStorage.setItem('GH_TOKEN', GITHUB_TOKEN);
-} else {
-  console.warn('토큰이 설정되지 않아 GitHub 동기화가 비활성화됩니다.');
-}
-
-
-const REPO_OWNER = 'zja8060';    // 본인 GitHub 사용자명
-const REPO_NAME  = 'bobsim';        // 동기화용 리포지토리 이름
-const FILE_PATH  = 'lunchbox_data.json'; // 리포지토리 내 저장할 파일
-
-/** GitHub에서 JSON 불러오기 */
-async function loadFromGitHub(){
-  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `token ${GITHUB_TOKEN}` }
-  });
-  if (!res.ok) return;  // 파일이 없으면 그냥 넘어감
-  const { content, sha } = await res.json();
-  const data = JSON.parse(atob(content));
-  applyPayload(data);
-  saveAllData();
-  renderAll();
-  window._ghFileSha = sha;  // 이후 업데이트용 SHA 저장
-}
-
-/** GitHub에 JSON 저장(덮어쓰기) */
-async function saveToGitHub(){
-  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
-  const payload = buildBackupPayload();
-  const body = {
-    message: "자동 동기화: lunchbox 데이터 업데이트",
-    content: btoa(JSON.stringify(payload, null, 2)),
-    sha: window._ghFileSha  // 최초엔 undefined여도 무방
-  };
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      Authorization: `token ${GITHUB_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
-  const json = await res.json();
-  if (json.content && json.content.sha) {
-    window._ghFileSha = json.content.sha;
-  }
-}
 /********** DATA **********/
 let customerDB=[], productDB=[], holidays={}, checkedCustomers={}, billInfo={coName:'',manager:'',account:'',note:'',date:''};
 let rules=[], memoStore=[];
@@ -532,11 +472,7 @@ function saveAllData(){
   localStorage.setItem('menuPool',JSON.stringify(menuPool));
   localStorage.setItem('menuMeta',JSON.stringify(menuMeta));
 }
-function commitData(){
-  saveAllData();
-  // localStorage에 저장 후 GitHub에도 동기화
-  saveToGitHub().catch(console.error);
-}
+function commitData(){ saveAllData(); performAutoBackup(); }
 
 /********** APPLY PAYLOAD **********/
 function applyPayload(o){
@@ -2015,9 +1951,17 @@ function renderAll(){
   }
   renderDelivery();
 }
+loadAllData();
+
 window.addEventListener('load', async ()=>{
-  // GitHub에 저장된 데이터가 있으면 먼저 불러와서 로컬에 적용
-  await loadFromGitHub().catch(console.error);
+  if(customerDB.length===0 && productDB.length===0 && Object.keys(holidays).length===0){
+    if(window.showOpenFilePicker){
+      if(confirm('처음 실행 같습니다. 백업 파일에서 불러오시겠습니까?')){
+        await loadBackupFileManually();
+        return;
+      }
+    }
+  }
   renderAll();
 });
 window.addEventListener('beforeunload', saveAllData);
