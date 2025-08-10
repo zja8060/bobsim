@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>도시락 배달 관리 시스템</title>
   <style>
-    /* ===== 기본 ===== */
     :root{
       --primary:#2176ff;
       --primary-ink:#1c3f6e;
@@ -23,11 +22,10 @@
     .top-btns button { border:none; border-radius:8px; background:#fffde7; color:var(--primary); padding:8px 12px; font-weight:700; cursor:pointer; font-size:14px; box-shadow:0 0 2px #bbb; touch-action:manipulation; }
 
     .nav { margin-top:12px; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; padding:0 8px; }
-    .nav button { display:inline-block; background:#f5f8fe; border:none; color:var(--primary); padding:10px 16px; margin:0 6px 0 0; font-size:15px; font-weight:700; border-radius:10px 10px 0 0; cursor:pointer; transition:background .2s; touch-action:manipulation; }
+    .nav button { display:inline-block; background:#f5f8fe; border:none; color:#var(--primary); padding:10px 16px; margin:0 6px 0 0; font-size:15px; font-weight:700; border-radius:10px 10px 0 0; cursor:pointer; transition:background .2s; touch-action:manipulation; }
     .nav button.active, .nav button:hover { background:#fff; border-bottom:2px solid var(--primary); }
     .page { display:none; } .page.active { display:block; }
 
-    /* 백업 재연결 배너 */
     .backup-banner{
       display:none; align-items:center; justify-content:space-between;
       gap:10px; padding:10px 14px; background:#fff3cd; color:#7a5d00;
@@ -40,19 +38,20 @@
     .backup-banner .primary{ background:#1976d2; color:#fff; }
     .backup-banner .ghost{ background:#fff; color:#7a5d00; border:1px solid #ffe08a; }
 
-    /* ===== 배달 카드 ===== */
-    .delivery-card { display:inline-block; background:#f6fafd; border-radius:14px; box-shadow:0 1px 6px #0001; margin:8px 12px 8px 0; padding:13px 30px 11px 20px; min-width:110px; }
-    .delivery-card .card-title { font-size:18px; font-weight:600; margin-bottom:5px; }
-    .delivery-card .card-prod { font-size:16px; }
-    .customer-detail-card { display:inline-block; margin:8px 10px 8px 0; border-radius:14px; padding:13px 25px 13px 19px; min-width:120px; box-shadow:0 1px 6px #0002; }
-    .customer-detail-card .card-title { font-size:17px; font-weight:600; margin-bottom:6px; }
-    .customer-detail-card .card-prod { font-size:15px; }
+    .delivery-summary-grid{ display:grid; gap:12px; grid-template-columns:repeat(8, minmax(0,1fr)); align-items:stretch; }
+    .delivery-card { display:block; background:#f6fafd; border-radius:14px; box-shadow:0 1px 6px #0001; padding:12px 16px; }
+    .delivery-card .card-title { font-size:16px; font-weight:700; margin-bottom:4px; text-align:center; }
+    .delivery-card .card-prod { font-size:14px; text-align:center; }
 
-    /* ===== 달력(메인) ===== */
+    .delivery-customer-grid{ display:grid; gap:10px; grid-template-columns:repeat(4, minmax(0,1fr)); align-items:stretch; }
+    .customer-detail-card { display:block; border-radius:14px; padding:12px 14px; box-shadow:0 1px 6px #0002; }
+    .customer-detail-card .card-title { font-size:16px; font-weight:800; margin-bottom:6px; text-align:center; }
+    .customer-detail-card .card-prod { font-size:14px; text-align:center; white-space:pre-line; }
+
     .calendar-container { background:#fff; margin:28px auto 0; max-width:900px; border-radius:18px; padding:20px; box-shadow:var(--shadow); }
     .calendar-header-area { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
-    .calendar-header-area select, .calendar-header-area button { font-size:16px; padding:8px 10px; border:1px solid #a4c6ff; border-radius:10px; background:#f2f8ff; color:var(--primary-ink); font-weight:700; cursor:pointer; }
-    .calendar-header-area button { background:#e3f2fd; border:1px solid #b2d6ff; color:var(--primary); }
+    .calendar-header-area select, .calendar-header-area button { font-size:16px; padding:8px 10px; border:1px solid #a4c6ff; border-radius:10px; background:#f2f8ff; color:#1b3f6e; font-weight:700; cursor:pointer; }
+    .calendar-header-area button { background:#e3f2fd; border:1px solid #b2d6ff; color:#2176ff; }
     .calendar-header-area button:hover { background:#d0ebff; }
     .calendar-table { width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
     .calendar-table th { height:40px; background:var(--primary); color:#fff; font-size:16px; border-radius:8px 8px 0 0; }
@@ -64,7 +63,6 @@
     .calendar-table td .memo { display:block; position:absolute; left:4px; bottom:4px; right:4px; font-size:12px; background:#ffd54f; color:#7d5000; border-radius:6px; padding:1px 5px; text-align:left; font-weight:700; }
     .calendar-table td:hover { background:#e3f2fd; }
 
-    /* 월 매출 요약 */
     .calendar-monthly-total { max-width:900px; margin:10px auto 0; background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:12px 16px; display:flex; gap:12px; align-items:center; justify-content:flex-end; color:#1a237e; flex-wrap:wrap; }
     .calendar-monthly-total .title{ margin-right:auto; font-weight:900; color:#2153a0; }
     .calendar-monthly-total .pill{ background:#f0f5ff; border:1px solid #d7e4ff; border-radius:999px; padding:6px 10px; font-weight:800; }
@@ -75,9 +73,8 @@
     .holidays-list-card li { list-style:none; padding:6px 0; font-size:14px; border-bottom:1px dotted #e1e4e8; color:#1a237e; display:flex; justify-content:space-between; cursor:pointer; transition:background .18s; }
     .holidays-list-card li:hover { background:#ffe08244; }
 
-    /* ===== 고객관리 ===== */
     .customer-container { margin:24px auto 0; max-width:1000px; background:#fff; border-radius:18px; box-shadow:var(--shadow); padding:20px; }
-    .customer-controls { margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap; }
+    .customer-controls { margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .customer-controls button { background:var(--primary); color:#fff; border:none; font-size:15px; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:800; transition:background .15s; touch-action:manipulation; }
     .customer-controls button:hover { background:#1565c0; }
     .customer-controls .print-invoice { background:#ffd36c; color:#6d4a00; }
@@ -85,8 +82,9 @@
     .customer-table th, .customer-table td { border:1px solid #e2e7ed; padding:10px 8px; text-align:left; font-size:15px; }
     .customer-table th { background:#e3f2fd; color:#2153a0; font-weight:800; }
     .customer-table input[type=checkbox] { width:18px; height:18px; }
+    .toggle-inline{ display:flex; align-items:center; gap:6px; }
+    .toggle-caption{ font-size:13px; color:#445; }
 
-    /* ===== 제품 ===== */
     .product-container { margin:24px auto 0; max-width:1200px; background:#fff; border-radius:18px; box-shadow:var(--shadow); padding:20px; }
     .product-title { font-size:20px; font-weight:900; margin-bottom:10px; }
     .product-table { width:100%; border-collapse:separate; border-spacing:0; background:#f7f9fc; }
@@ -102,14 +100,9 @@
     .product-table td .prod-del { background:#ffcccc; color:#b71c1c; border:none; border-radius:10px; padding:6px 12px; font-size:14px; cursor:pointer; }
     .product-table td:last-child, .product-table th:last-child { text-align:center; }
 
-    /* ===== 모달 공통 (크기 조절 가능) ===== */
     .modal-bg, .invoice-modal-bg { display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:#2228; z-index:1001; align-items:center; justify-content:center; }
     .modal-bg.active, .invoice-modal-bg.active { display:flex; }
-    .modal, .invoice-modal {
-      width:min(730px, 96vw); background:#fff; border-radius:16px; box-shadow:0 6px 36px #0004; padding:20px; position:relative; animation:popup .25s;
-      max-height:94vh; overflow:auto;
-      resize: both; min-width:320px; min-height:300px; /* 크기 조절 가능 */
-    }
+    .modal, .invoice-modal { width:min(730px, 96vw); background:#fff; border-radius:16px; box-shadow:0 6px 36px #0004; padding:20px; position:relative; animation:popup .25s; max-height:94vh; overflow:auto; resize:both; min-width:320px; min-height:300px; }
     .invoice-modal { width:min(980px, 98vw); }
     @keyframes popup { from{ transform:translateY(40px) scale(.97); opacity:0 } to{ transform:none; opacity:1 } }
     .modal-close, .invoice-modal-close { position:absolute; top:10px; right:12px; font-size:26px; cursor:pointer; color:#1976d2; background:none; border:none; }
@@ -126,7 +119,6 @@
     .toggle-btn.active .text { left:38px; color:#fff; }
     .toggle-btn.pay{ width:68px; } .toggle-btn.pay .circle{ left:2px; } .toggle-btn.pay.active .circle{ left:38px; }
 
-    /* 미니 달력 */
     .mini-cal-wrap { background:#f7faff; border-radius:12px; padding:12px; margin-bottom:16px; }
     .mini-cal-controls { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:6px; }
     .mini-cal-controls select, .mini-cal-controls button { font-size:14px; padding:6px 10px; border-radius:8px; border:1px solid #a4c6ff; background:#fff; color:#2153a0; }
@@ -156,31 +148,25 @@
     .total-summary { background:#f6fafd; border-radius:10px; padding:10px 14px; margin-top:10px; }
     .total-summary th, .total-summary td { padding:6px 10px; font-size:14px; } .total-summary th { background:#e7f3fe; border-radius:7px; } .total-summary td { text-align:right; }
 
-    /* ===== 청구서 팝업 ===== */
     .invoice-info-box { background:#fff; border:1px solid #e5eaf6; border-radius:14px; padding:12px; margin-bottom:12px; }
     .invoice-info-title { font-weight:900; color:#2153a0; margin-bottom:6px; }
     .invoice-info-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px 14px; }
     .invoice-info-grid input, .invoice-info-grid textarea { width:100%; padding:8px 10px; border:1px solid #cfe; border-radius:10px; background:#f8fbff; font-size:14px; }
     .invoice-info-grid textarea { resize:vertical; min-height:48px; grid-column:1 / span 2; }
-
     .invoice-toolbar { display:flex; justify-content:flex-end; gap:8px; margin:6px 0 12px; flex-wrap:wrap; }
     .invoice-toolbar button { background:#1976d2; color:#fff; border:none; border-radius:10px; padding:9px 12px; font-size:14px; font-weight:800; cursor:pointer; }
     .invoice-toolbar button.secondary { background:#455a64; }
     .invoice-toolbar button.warning { background:#ff8f00; }
-
     .invoice-popup-cust { margin-bottom:20px; border:1px solid #e5eaf6; border-radius:14px; padding:12px; background:#fff; }
     .invoice-popup-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
     .invoice-popup-title { font-size:18px; font-weight:900; }
     .invoice-popup-meta { font-size:13px; color:#667; }
-
     .invoice-popup-datebox { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
     .invoice-popup-datebox select { padding:6px 10px; border:1px solid #cfe; border-radius:10px; background:#f8fbff; }
-
     .invoice-grid { display:grid; grid-template-columns: 1.2fr .8fr; gap:12px; }
     .invoice-cal { border:1px solid #e1e6f4; border-radius:12px; overflow:hidden; }
     .invoice-cal-title { background:#f0f5ff; padding:8px 10px; font-weight:800; font-size:14px; border-bottom:1px solid #e1e6f4; display:flex; justify-content:space-between; align-items:center; }
     .badge-paid { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; background:#e8f5e9; color:#2e7d32; border:1px solid #cde7d1; }
-
     .invoice-cal-table { width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
     .invoice-cal-table th { background:#f7f9ff; font-size:12px; padding:6px 0; border-bottom:1px solid #e1e6f4; }
     .invoice-cal-table th.sunday { color:#c33; }
@@ -189,7 +175,6 @@
     .invoice-cal-table td .dlines { position:absolute; left:6px; right:6px; top:22px; bottom:4px; overflow:auto; }
     .invoice-cal-table td .ditem { display:block; font-size:11px; color:#1b418a; margin-top:2px; word-break:keep-all; }
     .invoice-cal-table td.holiday { background:#fff6f5; color:#c33; }
-
     .invoice-ledger{ border:1px solid #e1e6f4; border-radius:12px; background:#fff; }
     .invoice-ledger h5{ margin:0; padding:10px 12px; background:#f0f5ff; border-bottom:1px solid #e1e6f4; font-size:14px; color:#1b418a; }
     .invoice-ledger table{ width:100%; border-collapse:collapse; }
@@ -200,82 +185,66 @@
     .info-card { border:1px solid #d9e4ff; background:#f7faff; border-radius:12px; padding:10px 12px; margin-top:10px; }
     .info-card .line { font-size:13px; padding:2px 0; }
 
-    /* ===== 식단표 ===== */
-    .meal-container{ max-width:1200px; margin:20px auto 12px; background:#fff; border-radius:18px; box-shadow:var(--shadow); padding:16px; }
-    .meal-header h3{ margin:0; font-size:20px; }
-    .meal-toolbar{ display:flex; align-items:center; gap:8px; margin:10px 0; flex-wrap:wrap; }
-    .meal-toolbar button, .meal-toolbar input[type=date]{ border:1px solid #cfe; background:#f8fbff; color:#1b418a; padding:8px 10px; border-radius:10px; font-size:14px; touch-action:manipulation; }
+    .meal-container{ margin:24px auto 0; max-width:1200px; background:#fff; border-radius:18px; box-shadow:var(--shadow); padding:16px; }
+    .meal-header{ display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+    .meal-header h3{ margin:0; font-size:20px; font-weight:900; color:#1b418a; }
+    .meal-toolbar{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-start; margin-bottom:10px; }
+    .meal-toolbar button{ background:#e3f2fd; color:#2153a0; border:1px solid #b2d6ff; border-radius:10px; padding:8px 10px; font-weight:800; cursor:pointer; }
     .meal-toolbar button.primary{ background:#1976d2; color:#fff; border-color:#1976d2; }
-    .meal-range{ font-size:14px; color:#666; margin-left:6px; }
+    .meal-toolbar input[type=date]{ padding:7px 10px; border:1px solid #cfe; border-radius:10px; }
+    .meal-range{ font-weight:800; color:#334; margin-left:4px; }
+
     .meal-table{ width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; }
-    .meal-table th{ background:#edf3ff; color:#244a9a; padding:12px 8px; border:1px solid #e2e7f2; font-weight:900; text-align:center; font-size:16px; }
-    .meal-table td{ border:1px solid #e2e7f2; min-height:84px; height:94px; vertical-align:middle; padding:8px; font-size:18px; background:#fff; text-align:center; }
-    .meal-table td .cell-text{ white-space:pre-line; line-height:1.4; color:#183b86; font-size:18px; font-weight:800; text-align:center; }
-    .meal-table .col-group{ width:190px; font-weight:900; background:#fff7f7; }
-    .meal-table .group-head{ display:flex; align-items:center; justify-content:center; gap:6px; }
-    .group-name{ cursor:pointer; display:block; text-align:center; }
+    .meal-table th{ background:#f1f5ff; color:#244a9a; padding:10px 6px; border:1px solid #e2e7f2; font-weight:900; text-align:center; font-size:15px; }
+    .meal-table td{ border:1px solid #e2e7f2; min-height:64px; height:78px; vertical-align:middle; padding:6px; font-size:18px; text-align:center; cursor:pointer; }
+    .meal-table .col-group{ width:180px; background:#fff7f7; font-weight:900; text-align:center; }
+    .meal-table .cell-text{ white-space:pre-line; line-height:1.35; color:#183b86; font-size:18px; font-weight:900; text-align:center; }
 
-    /* 메모 영역: 가운데 정렬 */
-    .meal-note-wrap{ max-width:1200px; margin:10px auto 24px; display:flex; justify-content:center; }
-    .meal-note-input{
-      width:min(820px, 92vw); padding:10px 12px; border:1px solid #cfe; border-radius:10px; background:#fff;
-      font-size:14px;
-    }
+    .meal-note-wrap{ display:flex; justify-content:center; margin:10px 0 0; }
+    .meal-note-input{ width:min(960px, 95%); padding:10px 12px; border:1px solid #cfe; border-radius:12px; text-align:center; background:#fafcff; }
 
-    .meal-warehouse{ max-width:1200px; margin:10px auto 24px; background:#fff; border-radius:18px; box-shadow:var(--shadow); padding:14px; }
-    .warehouse-title{ font-weight:900; color:#1b418a; margin-bottom:8px; text-align:left; }
+    .meal-warehouse{ margin:16px auto 30px; max-width:1200px; background:#fff; border-radius:18px; box-shadow:var(--shadow); padding:16px; }
+    .warehouse-title{ font-weight:900; color:#2153a0; margin-bottom:10px; }
     .warehouse-columns{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; }
-    .wh-col{ background:#f6fbff; border:1px solid #d6e9ff; border-radius:12px; padding:10px; }
-    .wh-col-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
-    .wh-col-head .name{ font-weight:900; color:#1b418a; }
-    .wh-col .wh-add{ display:flex; gap:8px; margin:8px 0; }
-    .wh-col .wh-add input{ flex:1; padding:8px 10px; border:1px solid #cfe; border-radius:10px; }
-    .wh-col .wh-add button{ padding:8px 10px; border-radius:10px; border:1px solid #1976d2; background:#1976d2; color:#fff; font-weight:900; cursor:pointer; }
-    .wh-row{ background:#fff; border:1px solid #e5efff; border-radius:10px; padding:8px; margin-bottom:8px; }
-    .wh-row .wh-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; font-size:13px; color:#445; }
-    .wh-row .wh-body{ display:flex; gap:8px; align-items:center; }
-    .wh-row input[type=text]{ flex:1; padding:8px 10px; border:1px solid #cfe; border-radius:10px; background:#fff; }
-    .wh-del{ color:#b71c1c; background:#ffeaea; border:none; border-radius:8px; padding:6px 8px; cursor:pointer; }
+    .wh-col{ border:1px solid #e6edff; border-radius:14px; background:#f9fbff; padding:10px; }
+    .wh-col-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .wh-col-head .name{ font-weight:900; color:#193a87; }
 
-    /* 식단 셀 선택 팝업 */
-    .picker{ position:absolute; z-index:2000; background:#fff; border:1px solid #d7e2ff; border-radius:12px; box-shadow:0 8px 24px #0002; padding:10px; width:min(420px, 92vw); }
+    .wh-add{ display:flex; align-items:center; gap:6px; }
+    .wh-add input{ flex:1; padding:8px 10px; border:1px solid #cfe; border-radius:10px; background:#fff; font-size:14px; }
+    .wh-add button{ padding:8px 12px; border:none; background:#1976d2; color:#fff; border-radius:10px; font-weight:800; cursor:pointer; }
+
+    .wh-menu-list{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+    .wh-menu-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; background:#fff; border:1px solid #e6edff; border-radius:10px; padding:6px 8px; }
+    .wh-menu-text{ font-size:14px; color:#193a87; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 80px); }
+    .wh-menu-del{ background:#ffecec; color:#b71c1c; border:1px solid #ffcccc; border-radius:8px; font-size:12px; padding:4px 8px; cursor:pointer; }
+
+    .picker{ position:absolute; width:min(92vw, 420px); max-height:70vh; overflow:auto; z-index:1002; background:#fff; border:1px solid #dbe6ff; border-radius:14px; box-shadow:0 10px 30px #0003; padding:10px; }
     .picker h5{ margin:0 0 6px; font-size:14px; color:#1b418a; }
-    .picker .pick-list{ max-height:230px; overflow:auto; border:1px solid #eef3ff; padding:6px; border-radius:8px; }
-    .pick-item{ display:block; padding:8px 10px; border:1px solid #dfe7ff; border-radius:8px; margin:4px 0; cursor:pointer; background:#fff; }
-    .pick-item:hover{ background:#edf3ff; border-color:#bcd3ff; }
-    .picker .quick{ margin-top:8px; display:flex; gap:6px; }
-    .picker .quick input{ flex:1; padding:8px 10px; border:1px solid #cfe; border-radius:10px; }
-    .picker .quick button{ padding:8px 12px; border-radius:10px; border:1px solid #1976d2; background:#1976d2; color:#fff; font-weight:900; cursor:pointer; width:110px; }
-    .picker .clear-btn{ margin-top:8px; width:100%; border:1px solid #d9534f; background:#d9534f; color:#fff; font-weight:900; border-radius:10px; padding:8px 10px; cursor:pointer; }
+    .pick-list{ display:flex; flex-direction:column; gap:6px; }
+    .pick-item{ padding:8px 10px; border:1px solid #e8eefc; border-radius:10px; background:#f9fbff; cursor:pointer; font-size:14px; display:flex; justify-content:space-between; gap:8px; }
+    .pick-item:hover{ background:#eef4ff; }
+    .quick{ display:flex; align-items:center; gap:6px; margin-top:10px; }
+    .quick input{ flex:1; padding:8px 10px; border:1px solid #cfe; border-radius:10px; }
+    .quick button{ padding:8px 12px; border:none; background:#1976d2; color:#fff; border-radius:10px; font-weight:800; cursor:pointer; }
+    .clear-btn{ margin-top:8px; width:100%; border:none; background:#ffecec; color:#b71c1c; border:1px solid #ffcccc; border-radius:10px; padding:8px; font-weight:800; cursor:pointer; }
 
-    /* 토스트 */
-    .toast { position:fixed; right:12px; bottom:12px; background:#323232; color:#fff; padding:10px 14px; border-radius:10px; font-size:14px; z-index:3000; opacity:0; transform:translateY(10px); transition:opacity .2s, transform .2s; }
-    .toast.show { opacity:1; transform:translateY(0); }
+    #toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; background:#1f2937; color:#fff; padding:10px 14px; border-radius:999px; font-size:14px; box-shadow:0 4px 16px #0005; opacity:0; pointer-events:none; transition:opacity .2s; z-index:2000;}
+    #toast.show{ opacity:1; }
 
-    /* 반응형 */
-    @media (max-width:1080px){ .invoice-grid { grid-template-columns:1fr; } }
     @media (max-width:1024px){
       .calendar-table td { height:56px; font-size:16px; }
       .calendar-container { padding:14px; }
       .customer-container, .product-container, .meal-container, .meal-warehouse { padding:14px; }
-      .picker{ width:94vw; }
+      .delivery-summary-grid{ grid-template-columns:repeat(6, minmax(0,1fr)); }
+      .delivery-customer-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
     }
-    @media (max-width:768px){
-      .delivery-card{ padding:10px 16px; }
-      .customer-detail-card{ padding:10px 14px; }
-      .invoice-cal-table td{ height:92px; }
-      .meal-table th{ font-size:14px; padding:10px 6px; }
-      .meal-table td{ height:86px; font-size:16px; }
-      .meal-table td .cell-text{ font-size:16px; }
-      .calendar-monthly-total{ justify-content:flex-start; }
+    @media (max-width:640px){
+      .delivery-summary-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+      .delivery-customer-grid{ grid-template-columns:repeat(1, minmax(0,1fr)); }
     }
-
-    /* 인쇄(고객 단위 1장) */
     @media print {
-      .invoice-info-box, .invoice-toolbar, .invoice-popup-meta, .invoice-modal-bg, .modal-bg, .nav, .top-btns, .header, .backup-banner { display:none !important; }
-      .invoice-popup-cust{
-        page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid;
-      }
+      .invoice-info-box, .invoice-toolbar, .invoice-modal-bg, .modal-bg, .nav, .top-btns, .header, .backup-banner { display:none !important; }
     }
   </style>
 </head>
@@ -284,11 +253,9 @@
     도시락 배달 관리 시스템
     <div class="top-btns">
       <button id="btnBackupAssign">백업 파일 지정</button>
-      <!-- 불러오기 버튼 제거 -->
     </div>
   </div>
 
-  <!-- 백업 재연결 배너 -->
   <div id="backupReconnect" class="backup-banner">
     <div>지난 세션에 자동 백업을 사용했습니다. <b>백업 파일을 다시 지정</b>해주세요.</div>
     <div class="actions">
@@ -297,7 +264,6 @@
     </div>
   </div>
 
-  <!-- Nav -->
   <div class="nav">
     <button id="tab-delivery" class="active" onclick="showPage('delivery')">배달/달력</button>
     <button id="tab-customer" onclick="showPage('customer')">고객관리</button>
@@ -305,7 +271,7 @@
     <button id="tab-menu" onclick="showPage('menu')">식단표</button>
   </div>
 
-  <!-- ===== 배달 + 달력 ===== -->
+  <!-- ===== 배달/달력 페이지 ===== -->
   <div class="page active" id="page-delivery">
     <div style="max-width:1050px;margin:20px auto 0;background:#fff;box-shadow:0 4px 18px #0001;border-radius:18px;padding:16px;">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
@@ -313,11 +279,9 @@
         <button onclick="printDelivery()" style="font-size:14px;background:#e3f2fd;border:1px solid #b2d6ff;color:#2176ff;font-weight:800;border-radius:10px;padding:8px 12px;cursor:pointer;">인쇄</button>
       </div>
       <div class="hscroll">
-        <div id="deliverySummaryCards" style="margin-bottom:8px; min-width:720px;"></div>
+        <div id="deliverySummaryCards" class="delivery-summary-grid" style="margin-bottom:8px; min-width:720px;"></div>
       </div>
-      <div class="hscroll">
-        <div id="deliveryCustomerCards" style="margin-bottom:8px; min-width:720px;"></div>
-      </div>
+      <div id="deliveryCustomerCards" class="delivery-customer-grid" style="margin-top:8px;"></div>
     </div>
 
     <div class="calendar-container">
@@ -334,7 +298,6 @@
     </div>
 
     <div id="calendarMonthlyTotal" class="calendar-monthly-total"></div>
-
     <div class="holidays-lists-area" id="holidaysListsArea"></div>
   </div>
 
@@ -345,16 +308,15 @@
       <div class="customer-controls">
         <button onclick="addCustomer()">신규고객 추가</button>
         <button class="print-invoice" onclick="openInvoicePopup()">청구서 인쇄</button>
-        <button style="background:#ff6666;">선택 고객 삭제</button>
+        <button style="background:#ff6666;" onclick="deleteSelectedCustomers()">선택 고객 삭제</button>
+        <div class="toggle-inline">
+          <div class="toggle-btn pay" id="custFilterToggle" onclick="toggleCustomerFilterThisMonth()"><div class="circle"></div><div class="text">전체</div></div>
+          <span class="toggle-caption">이번달 고객만 보기</span>
+        </div>
       </div>
       <div class="hscroll">
         <table class="customer-table table-min-900">
-          <thead>
-            <tr>
-              <th><input type="checkbox" id="customerSelectAll" /></th>
-              <th>이름</th><th>주소</th><th>전화번호</th><th>전월까지 미수 금액</th><th>설정</th>
-            </tr>
-          </thead>
+          <thead><tr><th><input type="checkbox" id="customerSelectAll" /></th><th>이름</th><th>주소</th><th>전화번호</th><th>전월까지 미수 금액</th><th>설정</th></tr></thead>
           <tbody id="customerTableBody"></tbody>
         </table>
       </div>
@@ -388,18 +350,11 @@
         <button class="primary" onclick="printMeal()">인쇄</button>
         <button onclick="addMealGroup()">+ 구분 추가</button>
       </div>
-      <div class="hscroll">
-        <table class="meal-table table-min-1100" id="mealTable"></table>
-      </div>
+      <div class="hscroll"><table class="meal-table table-min-1100" id="mealTable"></table></div>
     </div>
-
-    <!-- 메모: 가운데 정렬 -->
-    <div class="meal-note-wrap">
-      <input id="mealNoteInput" class="meal-note-input" type="text" placeholder="(메모) 식단표 하단에 한 줄 메모를 남길 수 있습니다." />
-    </div>
-
+    <div class="meal-note-wrap"><input id="mealNoteInput" class="meal-note-input" type="text" placeholder="(메모) 식단표 하단에 한 줄 메모를 남길 수 있습니다." /></div>
     <div class="meal-warehouse">
-      <div class="warehouse-title">메뉴 창고 (구분별)</div>
+      <div class="warehouse-title">메뉴 창고 (구분별 여러 메뉴 저장)</div>
       <div class="warehouse-columns" id="warehouseColumns"></div>
     </div>
   </div>
@@ -471,17 +426,15 @@
     </div>
   </div>
 
-  <!-- ===== 청구서 인쇄 팝업 ===== -->
+  <!-- ===== 청구서 팝업 ===== -->
   <div class="invoice-modal-bg" id="invoiceModalBg">
     <div class="invoice-modal" id="invoiceModal">
       <button class="invoice-modal-close" onclick="closeInvoicePopup()">✕</button>
-
       <div class="invoice-toolbar">
         <button onclick="printInvoicePopup()">인쇄</button>
         <button class="secondary" onclick="saveInvoiceAsJPG()">파일로 저장(JPG)</button>
         <button class="warning" onclick="filterInvoiceThisMonth()">이번달 고객만</button>
       </div>
-
       <div class="invoice-info-box">
         <div class="invoice-info-title">청구정보</div>
         <div class="invoice-info-grid">
@@ -492,16 +445,16 @@
           <div style="grid-column:1 / span 2;"><textarea id="invInfoNote" placeholder="비고"></textarea></div>
         </div>
       </div>
-
       <div id="invoicePopupArea"></div>
     </div>
   </div>
 
   <div id="toast" class="toast"></div>
 
-  <!-- ===== 자바스크립트 (모든 기능 포함) ===== -->
   <script>
-    /* ===== 유틸 ===== */
+    const REPEAT_MONTHS_AHEAD_CHANGE = 120;
+    const REPEAT_MONTHS_AHEAD_STOP   = 150;
+
     function pad2(n){ return String(n).padStart(2,'0'); }
     function ymd(y,m,d){ return y+'-'+pad2(m)+'-'+pad2(d); }
     function parseDateStr(s){ var p=s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
@@ -512,7 +465,6 @@
     var today=new Date(), currentYear=today.getFullYear(), currentMonth=today.getMonth();
     var selectedDeliveryDate=getTomorrowStr();
 
-    /* ===== 데이터 ===== */
     var holidays={
       "2025-08-15":"광복절","2025-10-03":"개천절","2025-10-06":"추석",
       "2025-10-07":"추석","2025-10-08":"추석","2025-10-09":"한글날","2025-12-25":"크리스마스"
@@ -527,7 +479,6 @@
       {name:"알뜰 2인", items:[{name:"국", qty:2},{name:"전골", qty:1},{name:"반찬", qty:2}], price:11000}
     ];
 
-    /* ===== 페이지 전환 ===== */
     function showPage(page){
       document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
       document.getElementById('page-'+page).classList.add('active');
@@ -539,87 +490,112 @@
       if(page==='menu'){ renderMeal(); renderWarehouseColumns(); }
     }
 
-    /* ===== 배달물량 ===== */
     function setDeliveryDateFromCalendar(dateStr){ selectedDeliveryDate=dateStr; renderDeliveryPage(); }
+
     function renderDeliveryPage(){
       var d=parseDateStr(selectedDeliveryDate);
       document.getElementById('delivery-date').textContent =
         `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${WEEK_LABELS[d.getDay()]})`;
 
-      var itemSum={}, customerCardHTML='';
-      customers.forEach(c=>{
-        var bg=c.bgColor||'#fff';
-        var prods=(c.schedule[selectedDeliveryDate]||[]);
-        if(!prods.length) return;
-        var card=`<div class="customer-detail-card" style="background:${bg};"><div class="card-title">${c.name}</div>`;
-        prods.forEach(prod=>{
-          var pinfo=productList.find(x=>x.name===prod.name);
-          if(pinfo){ pinfo.items.forEach(item=>{ itemSum[item.name]=(itemSum[item.name]||0)+item.qty*prod.qty; }); }
-          card += `<div class="card-prod">${prod.name} ×${prod.qty}</div>`;
+      var itemSum={};
+      customers.forEach(cust=>{
+        const prods=(cust.schedule[selectedDeliveryDate]||[]);
+        prods.forEach(p=>{
+          const pinfo=productList.find(x=>x.name===p.name);
+          if(pinfo) pinfo.items.forEach(it=>{
+            itemSum[it.name]=(itemSum[it.name]||0)+it.qty*p.qty;
+          });
         });
-        card += `</div>`; customerCardHTML += card;
       });
+      const items=Object.keys(itemSum).sort((a,b)=>a.localeCompare(b,'ko'));
+      document.getElementById('deliverySummaryCards').innerHTML =
+        items.map(item=>`<div class="delivery-card"><div class="card-title">${item}</div><div class="card-prod">${itemSum[item]} 개</div></div>`).join('');
 
-      var itemCardsHTML='';
-      Object.keys(itemSum).forEach(item=>{
-        itemCardsHTML += `<div class="delivery-card"><div class="card-title">${item}</div>
-          <div class="card-prod">${itemSum[item]} 개</div></div>`;
+      const customerCards = [];
+      customers.forEach(c=>{
+        const list=(c.schedule[selectedDeliveryDate]||[]);
+        if(!list.length) return;
+        const prodNames = list.map(p=>p.name).sort((a,b)=>a.localeCompare(b,'ko'));
+        const firstKey = prodNames[0] || '';
+        const lines = list
+          .sort((a,b)=> a.name.localeCompare(b.name,'ko'))
+          .map(prod=> `${prod.name} ×${prod.qty}`)
+          .join('\n');
+        customerCards.push({
+          key:firstKey,
+          html:`<div class="customer-detail-card" style="background:${c.bgColor||'#fff'};">
+                  <div class="card-title">${c.name}</div>
+                  <div class="card-prod">${lines}</div>
+                </div>`
+        });
       });
-
-      document.getElementById('deliverySummaryCards').innerHTML=itemCardsHTML;
-      document.getElementById('deliveryCustomerCards').innerHTML=customerCardHTML;
+      customerCards.sort((a,b)=>a.key.localeCompare(b.key,'ko'));
+      document.getElementById('deliveryCustomerCards').innerHTML =
+        customerCards.map(x=>x.html).join('') || '<div style="color:#777;font-size:14px;">해당 날짜의 배달 고객이 없습니다.</div>';
     }
 
-    /* 인쇄(배경색 포함) */
     function printDelivery() {
       const d = parseDateStr(selectedDeliveryDate);
       const head = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${WEEK_LABELS[d.getDay()]})`;
 
       const itemSum = {};
-      let customerCardHTML = '';
+      const customerCards = [];
 
-      customers.forEach(cust => {
-        const list = (cust.schedule[selectedDeliveryDate] || []);
-        if (!list.length) return;
-        const bg = cust.bgColor || '#fff';
+      customers.forEach(cust=>{
+        const list=(cust.schedule[selectedDeliveryDate]||[]);
+        if(!list.length) return;
 
-        list.forEach(prod => {
-          const pinfo = productList.find(x => x.name === prod.name);
-          if (pinfo) pinfo.items.forEach(item => itemSum[item.name]=(itemSum[item.name]||0)+item.qty*prod.qty);
+        list.forEach(p=>{
+          const pinfo=productList.find(x=>x.name===p.name);
+          if(pinfo) pinfo.items.forEach(it=>{
+            itemSum[it.name]=(itemSum[it.name]||0)+it.qty*p.qty;
+          });
         });
 
-        let lines = '';
-        list.forEach(prod => { lines += `<div class="card-prod">${prod.name} ×${prod.qty}</div>`; });
-
-        customerCardHTML += `
-          <div class="customer-detail-card" style="background-color:${bg}; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
-            <div class="card-title">${cust.name}</div>${lines}
-          </div>`;
+        const prodNames=list.map(p=>p.name).sort((a,b)=>a.localeCompare(b,'ko'));
+        const firstKey=prodNames[0]||'';
+        const lines=list
+          .sort((a,b)=> a.name.localeCompare(b.name,'ko'))
+          .map(prod=> `${prod.name} ×${prod.qty}`)
+          .join('<br>');
+        customerCards.push({
+          key:firstKey,
+          html:`<div class="customer-detail-card" style="background-color:${cust.bgColor||'#fff'}; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                  <div class="card-title">${cust.name}</div>
+                  <div class="card-prod">${lines}</div>
+                </div>`
+        });
       });
 
-      let itemCardsHTML = '';
-      Object.keys(itemSum).forEach(item => {
-        itemCardsHTML += `<div class="delivery-card"><div class="card-title">${item}</div><div class="card-prod">${itemSum[item]} 개</div></div>`;
-      });
+      const items = Object.keys(itemSum).sort((a,b)=>a.localeCompare(b,'ko'));
+      const itemCardsHTML = items.map(item => `<div class="delivery-card"><div class="card-title">${item}</div><div class="card-prod">${itemSum[item]} 개</div></div>`).join('');
 
-      const page = `<div style="font-size:22px;font-weight:800;margin-bottom:10px;">${head}</div><div>${itemCardsHTML}</div><div style="margin-top:8px;">${customerCardHTML}</div>`;
+      customerCards.sort((a,b)=>a.key.localeCompare(b.key,'ko'));
+      const customerHTML = customerCards.map(x=>x.html).join('');
+
+      const page = `
+        <div style="font-size:22px;font-weight:800;margin-bottom:10px;">${head}</div>
+        <div class="grid8">${itemCardsHTML}</div>
+        <div class="grid4" style="margin-top:12px;">${customerHTML}</div>`;
+
       const css = `<style>
         *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         body{background:#fff !important; font-family:Pretendard,Arial,sans-serif; color:#222;}
-        .delivery-card{display:inline-block;background:#f6fafd;border-radius:14px;box-shadow:0 1px 6px #0001;margin:8px 12px 8px 0;padding:13px 30px 11px 20px;min-width:110px;}
-        .delivery-card .card-title{font-size:18px;font-weight:700;margin-bottom:5px;}
-        .delivery-card .card-prod{font-size:16px;}
-        .customer-detail-card{display:inline-block;margin:8px 10px 8px 0;border-radius:14px;padding:13px 25px 13px 19px;min-width:120px;box-shadow:0 1px 6px #0002;}
-        .customer-detail-card .card-title{font-size:17px;font-weight:800;margin-bottom:6px;}
-        .customer-detail-card .card-prod{font-size:15px;}
+        .grid8{ display:grid; grid-template-columns:repeat(8, 1fr); gap:8px; }
+        .grid4{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+        .delivery-card{display:block;background:#f6fafd;border-radius:14px;box-shadow:0 1px 6px #0001;padding:12px 16px;}
+        .delivery-card .card-title{font-size:16px;font-weight:700;margin-bottom:4px;text-align:center;}
+        .delivery-card .card-prod{font-size:14px;text-align:center;}
+        .customer-detail-card{display:block;border-radius:14px;padding:12px 14px;box-shadow:0 1px 6px #0002;}
+        .customer-detail-card .card-title{font-size:16px;font-weight:800;margin-bottom:6px;text-align:center;}
+        .customer-detail-card .card-prod{font-size:14px;white-space:pre-line;text-align:center;}
       </style>`;
-      const win = window.open('', '', 'width=1000,height=800');
+      const win = window.open('', '', 'width=1100,height=800');
       win.document.write('<html><head><title>배달물량 인쇄</title>' + css + '</head><body>' + page + '</body></html>');
       win.document.close();
       setTimeout(() => win.print(), 400);
     }
 
-    /* ===== 달력 ===== */
     function fillYearMonth(){
       const ySel=document.getElementById('yearSelect'), mSel=document.getElementById('monthSelect');
       ySel.innerHTML=''; mSel.innerHTML='';
@@ -741,22 +717,73 @@
       });
     }
 
-    /* ===== 고객 테이블 ===== */
+    let customerFilterThisMonth = false;
+    function updateCustomerFilterToggleUI(){
+      const t=document.getElementById('custFilterToggle');
+      if(!t) return;
+      t.className = 'toggle-btn pay' + (customerFilterThisMonth?' active':'');
+      t.querySelector('.text').textContent = customerFilterThisMonth ? 'ON' : '전체';
+    }
+    function toggleCustomerFilterThisMonth(){
+      customerFilterThisMonth = !customerFilterThisMonth;
+      updateCustomerFilterToggleUI();
+      renderCustomerTable();
+    }
     function renderCustomerTable(){
       const tb=document.getElementById('customerTableBody'); tb.innerHTML='';
       const now=new Date(); const ym=now.getFullYear()+'-'+pad2(now.getMonth()+1);
-      customers.forEach((c,i)=>{
+
+      let list = customers.map((c,i)=>({c,i}));
+      if(customerFilterThisMonth){
+        list = list.filter(x => hasScheduleInMonth(x.c, now.getFullYear(), now.getMonth()+1));
+      }
+
+      list.forEach(({c,i})=>{
         const unpaid=getPrevUnpaid(c, ym);
-        const tr=document.createElement('tr'); tr.style.background=c.bgColor||'#fff';
+        const tr=document.createElement('tr');
+        tr.style.background=c.bgColor||"#fff";
         tr.innerHTML = `
           <td><input type="checkbox" class="customerCheck" data-index="${i}" /></td>
-          <td>${c.name}</td><td>${c.addr}</td><td>${c.phone}</td>
+          <td>${c.name}</td>
+          <td>${c.addr}</td>
+          <td>${c.phone}</td>
           <td>${unpaid.toLocaleString()}원</td>
           <td><button onclick="openModal(${i})">설정</button></td>`;
         tb.appendChild(tr);
       });
+
       const all=document.getElementById('customerSelectAll');
       if(all){ all.onchange=()=>{ document.querySelectorAll('.customerCheck').forEach(cb=>cb.checked=all.checked); }; }
+
+      if(!customerFilterThisMonth){
+        makeRowsDraggable(tb, (from, to) => {
+          const [m] = customers.splice(from, 1);
+          customers.splice(to, 0, m);
+          renderCustomerTable();
+          touchSave();
+        });
+      }
+    }
+    function deleteSelectedCustomers(){
+      const checks = [...document.querySelectorAll('.customerCheck:checked')];
+      if (!checks.length){
+        alert('삭제할 고객을 선택하세요!');
+        return;
+      }
+      if (!confirm(`선택한 ${checks.length}명의 고객을 삭제할까요?`)) return;
+
+      const idxs = checks
+        .map(cb => parseInt(cb.getAttribute('data-index'), 10))
+        .filter(n => !isNaN(n))
+        .sort((a,b) => b - a);
+
+      idxs.forEach(i => { customers.splice(i, 1); });
+
+      const all = document.getElementById('customerSelectAll');
+      if (all) all.checked = false;
+
+      renderCustomerTable();
+      touchSave();
     }
     function getMonthTotal(customer, ym){
       let prodSum=0;
@@ -785,18 +812,31 @@
       renderCustomerTable(); openModal(customers.length-1);
     }
 
-    /* ===== 제품관리 ===== */
     function renderProductTable(){
-      const tbody=document.getElementById('productTableBody'); tbody.innerHTML='';
+      const tbody=document.getElementById('productTableBody'); 
+      tbody.innerHTML='';
       productList.forEach((row,i)=>{
-        const tr=document.createElement('tr'); tr.className='prod-row';
+        const tr=document.createElement('tr'); 
+        tr.className='prod-row';
         tr.innerHTML = `
-          <td>${i+1}</td>
-          <td><input type="text" value="${row.name}" onchange="productList[${i}].name=this.value;renderProductTable();fillProdOptions();" /></td>
-          <td><div class="prod-items" id="prodItems-${i}"></div><button class="prod-add-item" onclick="addProdItem(${i})">+ 품목</button></td>
-          <td><input type="number" value="${row.price}" onchange="productList[${i}].price=parseInt(this.value)||0" /></td>
-          <td><button class="prod-del" onclick="delProductRow(${i})">삭제</button></td>`;
-        tbody.appendChild(tr); renderProdItems(i);
+          <td><span class="dnd-handle">≡</span>${i+1}</td>
+          <td><input type="text" value="${row.name}"
+                onchange="productList[${i}].name=this.value;renderProductTable();fillProdOptions();touchSave();"></td>
+          <td><div class="prod-items" id="prodItems-${i}"></div>
+              <button class="prod-add-item" onclick="addProdItem(${i});">+ 품목</button></td>
+          <td><input type="number" value="${row.price}"
+                onchange="productList[${i}].price=parseInt(this.value)||0;touchSave();"></td>
+          <td><button class="prod-del" onclick="delProductRow(${i});">삭제</button></td>`;
+        tbody.appendChild(tr);
+        renderProdItems(i);
+      });
+
+      makeRowsDraggable(tbody, (from, to) => {
+        const [m] = productList.splice(from, 1);
+        productList.splice(to, 0, m);
+        renderProductTable();
+        fillProdOptions();
+        touchSave();
       });
     }
     function renderProdItems(idx){
@@ -804,10 +844,10 @@
       productList[idx].items.forEach((item,j)=>{
         const box=document.createElement('div'); box.className='prod-item-box';
         box.innerHTML = `
-          <input type="text" value="${item.name}" onchange="productList[${idx}].items[${j}].name=this.value" />
+          <input type="text" value="${item.name}" onchange="productList[${idx}].items[${j}].name=this.value;touchSave();" />
           <span>&times;</span>
-          <input type="number" value="${item.qty}" min="1" onchange="productList[${idx}].items[${j}].qty=parseInt(this.value)||1" />
-          <button class="prod-item-del" onclick="delProdItem(${idx},${j})">×</button>`;
+          <input type="number" value="${item.qty}" min="1" onchange="productList[${idx}].items[${j}].qty=parseInt(this.value)||1;touchSave();" />
+          <button class="prod-item-del" onclick="delProdItem(${idx},${j});">×</button>`;
         div.appendChild(box);
       });
     }
@@ -822,7 +862,36 @@
       const prod=productList.find(x=>x.name===sel.value); document.getElementById('prodPrice').value = prod?prod.price:0;
     }
 
-    /* ===== 고객설정 모달 ===== */
+    function makeRowsDraggable(tbody, onReorder) {
+      if (!tbody) return;
+      let dragIndex = null;
+      [...tbody.querySelectorAll('tr')].forEach((tr, idx) => {
+        tr.classList.add('draggable-row');
+        tr.setAttribute('draggable', 'true');
+        tr.addEventListener('dragstart', (e) => {
+          dragIndex = idx;
+          tr.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', String(idx));
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        tr.addEventListener('dragend', () => {
+          tr.classList.remove('dragging');
+          [...tbody.querySelectorAll('tr')].forEach(r => r.classList.remove('over'));
+          dragIndex = null;
+        });
+        tr.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; tr.classList.add('over'); });
+        tr.addEventListener('dragleave', () => { tr.classList.remove('over'); });
+        tr.addEventListener('drop', (e) => {
+          e.preventDefault();
+          tr.classList.remove('over');
+          const from = dragIndex ?? parseInt(e.dataTransfer.getData('text/plain'), 10);
+          const to = idx;
+          if (isNaN(from) || isNaN(to) || from === to) return;
+          onReorder(from, to);
+        });
+      });
+    }
+
     let tempCustIdx, tempData={}, tempSchedule={}, tempVatSep=true, tempPaid=false, tempPaidMap={};
     let miniCalYearVal=today.getFullYear(), miniCalMonthVal=today.getMonth(), selectedDate=null;
     function currentYmKey(){ return miniCalYearVal+'-'+pad2(miniCalMonthVal+1); }
@@ -846,7 +915,7 @@
       document.getElementById('modalMemo').value=c.memo||'';
 
       const colors=document.getElementById('colorPickers'); colors.innerHTML='';
-      const colorList = ['#ffebee','#fff3e0','#fffde7','#e8f5e9','#e3f2fd','#e8eaf6','#f3e5f5']; /* 7색 */
+      const colorList = ['#ffebee','#fff3e0','#fffde7','#e8f5e9','#e3f2fd','#e8eaf6','#f3e5f5'];
       colorList.forEach(col=>{
         const cdiv=document.createElement('div'); cdiv.className='color-circle'; cdiv.style.background=col;
         if((tempData.bgColor||'#ffebee')===col) cdiv.classList.add('selected');
@@ -931,7 +1000,6 @@
     function showWeekdaySelection(){ document.getElementById('weekdayCheckArea').style.display='inline-block'; }
     function hideWeekdaySelection(){ document.getElementById('weekdayCheckArea').style.display='none'; }
 
-    /* 공휴일 소급 적용 */
     function applyHolidayRetroactively(ds){
       customers.forEach(c=>{
         if(!c.schedule || !c.schedule[ds]) return;
@@ -962,7 +1030,7 @@
         const incHoliday = checked.includes('H');
         const selDay=parseInt(selectedDate.slice(-2),10);
         const baseY=miniCalYearVal, baseM=miniCalMonthVal;
-        const monthsAhead=12;
+        const monthsAhead=REPEAT_MONTHS_AHEAD_CHANGE;
 
         for(let mo=0; mo<monthsAhead; mo++){
           const dateTmp=new Date(baseY, baseM+mo, 1);
@@ -988,10 +1056,22 @@
     }
     function removeProdFromDate(type){
       if(!selectedDate) return alert('날짜를 선택하세요.');
-      if(type==='only'){ delete tempSchedule[selectedDate]; }
-      else if(type==='after'){
-        const y=miniCalYearVal, m=miniCalMonthVal, start=parseInt(selectedDate.slice(-2),10), days=new Date(y, m+1, 0).getDate();
-        for(let d=start; d<=days; d++){ const ds=ymd(y, m+1, d); delete tempSchedule[ds]; }
+      if(type==='only'){ 
+        delete tempSchedule[selectedDate]; 
+      }
+      else if(type==='after') {
+        const start = parseDateStr(selectedDate);
+        const monthsAhead = REPEAT_MONTHS_AHEAD_STOP;
+        for(let mo=0; mo<monthsAhead; mo++){
+          const dt = new Date(start.getFullYear(), start.getMonth()+mo, 1);
+          const y = dt.getFullYear(), m = dt.getMonth();
+          const days = new Date(y, m+1, 0).getDate();
+          const begin = (mo===0 ? start.getDate() : 1);
+          for(let d=begin; d<=days; d++){
+            const ds = ymd(y, m+1, d);
+            if (tempSchedule[ds]) delete tempSchedule[ds];
+          }
+        }
       }
       renderMiniCal(); renderProdList(); renderSummary();
     }
@@ -1032,7 +1112,6 @@
       closeModal();
     }
 
-    /* ===== 청구서 팝업 ===== */
     function openInvoicePopup(){
       const checked=[...document.querySelectorAll('.customerCheck:checked')];
       if(!checked.length){ alert('인쇄할 고객을 선택하세요!'); return; }
@@ -1088,7 +1167,7 @@
           const vat=cust.vatSep?Math.round(sum*0.1):0, total=sum+vat;
 
           const rows = Object.values(prodTotals)
-            .sort((a,b)=> a.name.localeCompare(b.name) || a.unit-b.unit)
+            .sort((a,b)=> a.name.localeCompare(b.name,'ko') || a.unit-b.unit)
             .map(r=>`<tr><td>${r.name}</td><td>${r.unit.toLocaleString()}원</td><td>${r.qty}</td><td>${r.amount.toLocaleString()}원</td></tr>`)
             .join('') || `<tr><td colspan="4" style="text-align:center;color:#888;">내역 없음</td></tr>`;
 
@@ -1170,10 +1249,7 @@
       const css=`<style>
         @page { size: A4 portrait; margin: 10mm; }
         body{font-family:Pretendard,Arial,sans-serif;color:#222;background:#fff;}
-        .invoice-popup-cust{
-          margin-bottom:20px;border:1px solid #e5eaf6;border-radius:14px;padding:12px 12px 10px;background:#fff;
-          page-break-after:always;break-after:page;page-break-inside:avoid;break-inside:avoid;
-        }
+        .invoice-popup-cust{ margin-bottom:20px;border:1px solid #e5eaf6;border-radius:14px;padding:12px 12px 10px;background:#fff; page-break-after:always;break-after:page;page-break-inside:avoid;break-inside:avoid;}
         .invoice-popup-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;}
         .invoice-popup-title{font-size:18px;font-weight:900;}
         .invoice-popup-meta{display:none !important;}
@@ -1196,13 +1272,8 @@
         .invoice-ledger tfoot td{ font-weight:800; }
         .info-card{ border:1px solid #d9e4ff;background:#f7faff;border-radius:10px; padding:8px 10px;margin-top:6px;font-size:12px;line-height:1.35; page-break-inside:avoid; break-inside:avoid; }
         .info-card .line{font-size:12px;padding:1px 0;}
-        @media print and (orientation:landscape){
-          .invoice-grid{ grid-template-columns:1fr 1fr !important; gap:10px !important; }
-          .invoice-cal-table td{ height:82px !important; }
-        }
-        @media print and (orientation:portrait){
-          .invoice-grid{ grid-template-columns:1fr !important; gap:8px !important; }
-        }
+        @media print and (orientation:landscape){ .invoice-grid{ grid-template-columns:1fr 1fr !important; gap:10px !important; } .invoice-cal-table td{ height:82px !important; } }
+        @media print and (orientation:portrait){ .invoice-grid{ grid-template-columns:1fr !important; gap:8px !important; } }
       </style>`;
 
       const win=window.open('','','width=1100,height=800');
@@ -1232,17 +1303,71 @@
       if(hiddenCount===sections.length) alert('이번 달 일정이 있는 고객이 없습니다.');
     }
 
-    /* ===== 식단표 ===== */
     function getMonday(d){ const x=new Date(d); const day=x.getDay(); const diff = (day===0? -6 : 1) - day; x.setDate(x.getDate()+diff); x.setHours(0,0,0,0); return x; }
     function addDays(base, n){ const x=new Date(base); x.setDate(x.getDate()+n); return x; }
 
-    let mealGroups = [ { name:'기본', warehouse:{ '국':'된장국', '밥':'찰보리밥' }, plan:{} } ];
+    /* === 식단표 데이터: 구분별 여러 메뉴 저장 === */
+    // savedMenus: string[] , plan[ds]: string (줄바꿈으로 누적)
+    let mealGroups = [ { name:'기본', savedMenus:[], plan:{} } ];
     let weekStart = getMonday(new Date());
-    let mealNotes = {}; // { 'YYYY-MM-DD'(주 시작일): '메모' }
-
+    let mealNotes = {};
     function weekKey(d){ return ymd(d.getFullYear(), d.getMonth()+1, d.getDate()); }
     function mmdd(d){ return pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
     function goMealToday(){ weekStart = getMonday(new Date()); renderMeal(); }
+
+    function appendUniqueLine(existing, text){
+      const t=(text||'').trim(); if(!t) return existing||'';
+      const cur=(existing||'').trim();
+      if(!cur) return t;
+      const lines=cur.split('\n').map(s=>s.trim()).filter(Boolean);
+      if(lines.includes(t)) return cur;
+      return cur+'\n'+t;
+    }
+
+    /* 마이그레이션: v1/v2 구조 → savedMenus[] + plan:string */
+    function migrateMealGroups(){
+      mealGroups = (mealGroups||[]).map(g=>{
+        const copy = {...g};
+        if(!Array.isArray(copy.savedMenus)) copy.savedMenus = [];
+
+        // v2: defaultMenu(string) → savedMenus[0]
+        if(typeof copy.defaultMenu==='string' && copy.defaultMenu.trim()){
+          const val = copy.defaultMenu.trim();
+          if(!copy.savedMenus.includes(val)) copy.savedMenus.push(val);
+        }
+        // v1 흔적: warehouse(object) → 가능한 string을 모아 저장
+        if(copy.warehouse && typeof copy.warehouse==='object'){
+          Object.values(copy.warehouse).forEach(v=>{
+            if(typeof v==='string' && v.trim()){
+              const s=v.trim();
+              if(!copy.savedMenus.includes(s)) copy.savedMenus.push(s);
+            }else if(Array.isArray(v)){
+              v.forEach(x=>{
+                const s = (typeof x==='string') ? x : (x && x.menu ? String(x.menu) : '');
+                const t = (s||'').trim();
+                if(t && !copy.savedMenus.includes(t)) copy.savedMenus.push(t);
+              });
+            }
+          });
+        }
+        // plan: array → string
+        if(copy.plan && typeof copy.plan==='object'){
+          Object.keys(copy.plan).forEach(ds=>{
+            const v=copy.plan[ds];
+            if(Array.isArray(v)){
+              const menus = v.map(it=> (it && it.menu ? String(it.menu).trim() : '')).filter(Boolean);
+              copy.plan[ds] = menus.join('\n');
+            }else if(typeof v!=='string'){
+              copy.plan[ds] = '';
+            }
+          });
+        }else{
+          copy.plan = {};
+        }
+        delete copy.defaultMenu; delete copy.warehouse;
+        return copy;
+      });
+    }
 
     function renderMeal(){
       const table=document.getElementById('mealTable'); table.innerHTML='';
@@ -1265,8 +1390,7 @@
         for(let i=0;i<7;i++){
           const d=addDays(weekStart,i);
           const ds=ymd(d.getFullYear(), d.getMonth()+1, d.getDate());
-          const cell=g.plan[ds]||[];
-          const text = cell.map(it=> it.cat && it.cat!=='메뉴' ? `${it.cat}: ${it.menu}` : `${it.menu}`).join('\n');
+          const text=g.plan[ds]||'';
           tbody += `<td onclick="openPicker(event, ${gi}, '${ds}')"><div class="cell-text">${text||''}</div></td>`;
         }
         tbody+='</tr>';
@@ -1281,87 +1405,114 @@
       noteInput.oninput = ()=>{ mealNotes[key] = noteInput.value; touchSave(); };
     }
     function shiftWeek(delta){ weekStart = addDays(weekStart, delta); renderMeal(); }
-    function addMealGroup(){ const name = prompt('새 구분 이름?', '기본'); if(!name) return; mealGroups.push({ name, warehouse:{}, plan:{} }); renderMeal(); renderWarehouseColumns(); }
+    function addMealGroup(){ const name = prompt('새 구분 이름?', '기본'); if(!name) return; mealGroups.push({ name, savedMenus:[], plan:{} }); renderMeal(); renderWarehouseColumns(); }
     function renameMealGroup(i){ const nv = prompt('구분 이름 변경', mealGroups[i].name); if(!nv) return; mealGroups[i].name = nv.trim(); renderMeal(); renderWarehouseColumns(); }
 
+    /* 메뉴 창고(구분별 여러 메뉴) */
     function renderWarehouseColumns(){
       const wrap=document.getElementById('warehouseColumns'); wrap.innerHTML='';
       mealGroups.forEach((g,gi)=>{
         const col=document.createElement('div'); col.className='wh-col';
-        let rowsHtml='';
-        Object.keys(g.warehouse).forEach(cat=>{
-          rowsHtml += `
-            <div class="wh-row">
-              <div class="wh-head"><b>${cat}</b><button class="wh-del" onclick="whDeleteCategory(${gi}, '${cat.replace(/'/g,"\\'")}')">삭제</button></div>
-              <div class="wh-body"><input type="text" value="${g.warehouse[cat]||''}" placeholder="${cat} 기본 메뉴 입력" oninput="whUpdateMenu(${gi}, '${cat.replace(/'/g,"\\'")}', this.value)" /></div>
-            </div>`;
-        });
+        const listHTML = (g.savedMenus||[]).map((m,mi)=>`
+          <div class="wh-menu-item">
+            <div class="wh-menu-text" title="${m.replace(/"/g,'&quot;')}">${m}</div>
+            <button class="wh-menu-del" onclick="deleteSavedMenu(${gi}, ${mi});">삭제</button>
+          </div>
+        `).join('');
         col.innerHTML = `
-          <div class="wh-col-head"><span class="name">${g.name}</span><div class="tools"></div></div>
-          <div>${rowsHtml || '<div style="color:#888;font-size:13px;">카테고리를 추가하세요.</div>'}</div>
+          <div class="wh-col-head"><span class="name">${g.name}</span></div>
           <div class="wh-add">
-            <input type="text" id="whAddInput_${gi}" placeholder="[카테고리] 추가 (Enter)" />
-            <button onclick="whAddCategory(${gi})">+</button>
-          </div>`;
+            <input id="whAdd_${gi}" type="text" placeholder="메뉴 입력 후 Enter" />
+            <button onclick="addSavedMenuFromWarehouse(${gi})">추가</button>
+          </div>
+          <div class="wh-menu-list" id="whList_${gi}">${listHTML || '<div style="color:#789; font-size:13px;">저장된 메뉴 없음</div>'}</div>`;
         wrap.appendChild(col);
-        const input=document.getElementById(`whAddInput_${gi}`); input.onkeydown=(e)=>{ if(e.key==='Enter'){ whAddCategory(gi); } };
+
+        const input = col.querySelector('input');
+        input.addEventListener('keydown', (e)=>{
+          if(e.key==='Enter'){ e.preventDefault(); addSavedMenuFromWarehouse(gi); }
+        });
       });
     }
-    function whAddCategory(gi){ const input=document.getElementById(`whAddInput_${gi}`); if(!input) return; const v=(input.value||'').trim(); if(!v) return;
-      const g=mealGroups[gi]; if(g.warehouse[v]){ alert('이미 있는 카테고리입니다.'); return; } g.warehouse[v]=''; input.value=''; renderWarehouseColumns(); }
-    function whDeleteCategory(gi, cat){ const g=mealGroups[gi]; delete g.warehouse[cat]; renderWarehouseColumns(); }
-    function whUpdateMenu(gi, cat, val){ const g=mealGroups[gi]; g.warehouse[cat]=val; }
+    function addSavedMenu(gi, text){
+      const t=(text||'').trim(); if(!t) return false;
+      const arr = mealGroups[gi].savedMenus || (mealGroups[gi].savedMenus=[]);
+      if(arr.includes(t)) return false;
+      arr.push(t);
+      return true;
+    }
+    function deleteSavedMenu(gi, mi){
+      const arr = mealGroups[gi].savedMenus || [];
+      if(mi>=0 && mi<arr.length){ arr.splice(mi,1); renderWarehouseColumns(); }
+    }
+    function addSavedMenuFromWarehouse(gi){
+      const inp=document.getElementById('whAdd_'+gi);
+      if(!inp) return;
+      const added = addSavedMenu(gi, inp.value);
+      if(added){ inp.value=''; renderWarehouseColumns(); showToast('메뉴 저장됨'); }
+    }
 
+    /* 식단 팝업 */
     let pickerEl=null;
     function openPicker(ev, gi, ds){
       closePicker();
       const g=mealGroups[gi];
-      const cats=Object.keys(g.warehouse);
 
       pickerEl=document.createElement('div'); pickerEl.className='picker';
-      const pickList = cats.map(cat=>{
-        const val=g.warehouse[cat]||'';
-        return `<div class="pick-item" data-cat="${cat.replace(/"/g,'&quot;')}" title="클릭하면 즉시 적용">${cat} : <b style="color:#1b418a">${val||'-'}</b></div>`;
-      }).join('') || '<div style="color:#888;font-size:13px;">카테고리가 없습니다.</div>';
+
+      // 저장된 메뉴 목록
+      const savedList = (g.savedMenus||[]);
+      const listHTML = savedList.length
+        ? savedList.map((txt, idx)=>`<div class="pick-item" onclick="applySavedMenu(${gi}, '${ds}', ${idx})"><span>${txt}</span><b>추가</b></div>`).join('')
+        : `<div style="color:#888;font-size:13px;">저장된 메뉴가 없습니다.</div>`;
 
       pickerEl.innerHTML = `
-        <div><h5>창고에서 선택 (클릭 즉시 적용)</h5><div class="pick-list">${pickList}</div></div>
-        <div class="quick"><input id="pickerQuick" type="text" placeholder="빠른 입력: 예) 국: 된장국  (Enter 저장)" /><button id="pickerSaveBtn">저장</button></div>
+        <div><h5>저장된 메뉴</h5><div class="pick-list">${listHTML}</div></div>
+        <div class="quick">
+          <input id="pickerQuick" type="text" placeholder="메뉴 입력 후 Enter로 저장/적용" />
+          <button id="pickerSaveBtn">저장</button>
+        </div>
         <button class="clear-btn" id="pickerClearBtn">이 칸 비우기</button>`;
-      document.body.appendChild(pickerEl);
-      const r=ev.target.getBoundingClientRect();
-      pickerEl.style.left=(Math.min(r.left, window.innerWidth- pickerEl.offsetWidth - 12)+window.scrollX)+'px';
-      pickerEl.style.top=(r.bottom+window.scrollY+6)+'px';
 
-      pickerEl.querySelectorAll('.pick-item').forEach(el=>{ el.addEventListener('click', ()=>{ const cat = el.getAttribute('data-cat'); applyWarehousePick(gi, ds, cat); closePicker(); }); });
-      const quick=document.getElementById('pickerQuick'); const saveBtn=document.getElementById('pickerSaveBtn');
+      document.body.appendChild(pickerEl);
+
+      // 위치
+      const r=ev.currentTarget.getBoundingClientRect();
+      const px = Math.min(r.left, window.innerWidth - 440) + window.scrollX;
+      const py = (r.bottom + 6) + window.scrollY;
+      pickerEl.style.left=px+'px'; pickerEl.style.top=py+'px';
+
+      // 빠른 입력: Enter로 저장/적용
+      const quick=document.getElementById('pickerQuick');
+      const saveBtn=document.getElementById('pickerSaveBtn');
       const save = ()=> { savePickerQuick(gi, ds); closePicker(); };
-      quick.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); save(); } }); saveBtn.addEventListener('click', save);
+      quick.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); save(); } });
+      saveBtn.addEventListener('click', save);
+      quick.focus();
+
       document.getElementById('pickerClearBtn').onclick = ()=>{ clearMealCell(gi, ds); closePicker(); };
     }
     function closePicker(){ if(pickerEl){ pickerEl.remove(); pickerEl=null; } }
     window.addEventListener('click',(e)=>{ if(pickerEl && !pickerEl.contains(e.target) && !e.target.closest('.picker')){ if(!e.target.closest('td')) closePicker(); } });
 
-    function parseFreeLines(text){
-      const items=[]; (text||'').split('\n').map(s=>s.trim()).filter(s=>s).forEach(line=>{
-        const idx=line.indexOf(':'); if(idx>-1){ const cat=line.slice(0,idx).trim(), menu=line.slice(idx+1).trim(); items.push({cat:cat||'메뉴', menu}); }
-        else{ items.push({cat:'메뉴', menu:line}); }
-      }); return items;
-    }
-    function applyWarehousePick(gi, ds, cat){
-      const g=mealGroups[gi]; const menu=g.warehouse[cat]||''; if(!menu){ alert('이 카테고리에 저장된 메뉴가 없습니다.'); return; }
-      let arr=g.plan[ds]||[]; const ix = arr.findIndex(x=>x.cat===cat); if(ix>=0) arr[ix].menu = menu; else arr.push({cat, menu});
-      g.plan[ds]=arr; renderMeal();
+    function applySavedMenu(gi, ds, idx){
+      const g=mealGroups[gi];
+      const txt = (g.savedMenus||[])[idx] || '';
+      if(!txt) return;
+      const cur=g.plan[ds]||'';
+      g.plan[ds] = appendUniqueLine(cur, txt);
+      renderMeal();
     }
     function savePickerQuick(gi, ds){
-      const g=mealGroups[gi]; const q=document.getElementById('pickerQuick').value.trim(); if(!q){ return; }
-      const items = parseFreeLines(q); if(!items.length){ return; }
-      let arr = g.plan[ds] || [];
-      items.forEach(it=>{
-        if(it.cat){ const ix = arr.findIndex(x=>x.cat===it.cat); if(ix>=0) arr[ix].menu = it.menu; else arr.push({cat:it.cat, menu:it.menu}); g.warehouse[it.cat] = it.menu; }
-        else{ arr.push({cat:'메뉴', menu:it.menu}); }
-      });
-      g.plan[ds] = arr; renderMeal(); renderWarehouseColumns();
+      const g=mealGroups[gi];
+      const text=(document.getElementById('pickerQuick')?.value||'').trim();
+      if(!text) return;
+      // 1) 구분 저장목록에 추가(중복 방지)
+      addSavedMenu(gi, text);
+      // 2) 현재 칸에도 추가(기존 유지)
+      const cur=g.plan[ds]||'';
+      g.plan[ds] = appendUniqueLine(cur, text);
+      renderMeal(); renderWarehouseColumns();
     }
     function clearMealCell(gi, ds){ const g=mealGroups[gi]; delete g.plan[ds]; renderMeal(); }
 
@@ -1385,12 +1536,12 @@
       setTimeout(()=>win.print(),350);
     }
 
-    /* ===== 초기 렌더 ===== */
     window.addEventListener('DOMContentLoaded', ()=>{
       fillYearMonth(); renderCalendar(); renderHolidaysList();
       renderCustomerTable(); renderProductTable(); fillProdOptions();
       selectedDeliveryDate=getTomorrowStr(); renderDeliveryPage();
-      renderMeal(); renderWarehouseColumns();
+      migrateMealGroups(); renderMeal(); renderWarehouseColumns();
+      updateCustomerFilterToggleUI();
     });
   </script>
 
@@ -1399,7 +1550,7 @@
 
   <!-- ===== 저장/복원 & 자동 백업 ===== -->
   <script>
-  const STATE_VERSION = 1;
+  const STATE_VERSION = 3; // v3: mealGroups.savedMenus[] 도입
   const LS_KEY = 'lunchapp_state_v' + STATE_VERSION;
   const LS_BACKUP_WANTED_KEY = 'lunchapp_backup_wanted';
   let backupFileHandle = null;
@@ -1414,6 +1565,36 @@
     holidays    = state.holidays    || {};
     mealGroups  = state.mealGroups  || [];
     mealNotes   = state.mealNotes   || {};
+    // 마이그레이션
+    if (!Array.isArray(mealGroups)) mealGroups = [];
+    if (typeof window.migrateMealGroups === 'function') {
+      window.migrateMealGroups();
+    } else {
+      // 방어적 인라인 마이그레이션 (savedMenus 보장)
+      mealGroups = mealGroups.map(g=>{
+        const copy={...g};
+        if(!Array.isArray(copy.savedMenus)) copy.savedMenus=[];
+        if(typeof copy.defaultMenu==='string' && copy.defaultMenu.trim()){
+          const v=copy.defaultMenu.trim();
+          if(!copy.savedMenus.includes(v)) copy.savedMenus.push(v);
+        }
+        if(copy.plan && typeof copy.plan==='object'){
+          Object.keys(copy.plan).forEach(ds=>{
+            const v=copy.plan[ds];
+            if(Array.isArray(v)){
+              const menus = v.map(it=> (it && it.menu ? String(it.menu).trim() : '')).filter(Boolean);
+              copy.plan[ds] = menus.join('\n');
+            }else if(typeof v!=='string'){
+              copy.plan[ds] = '';
+            }
+          });
+        }else{
+          copy.plan = {};
+        }
+        delete copy.defaultMenu; delete copy.warehouse;
+        return copy;
+      });
+    }
   }
   function rehydrateUI() {
     fillYearMonth(); renderCalendar(); renderHolidaysList();
@@ -1462,25 +1643,58 @@
   }
 
   async function chooseBackupFile(){
-    if (!('showSaveFilePicker' in window)) {
-      alert('자동 백업은 이 브라우저에서 지원되지 않습니다. Chrome/Edge 최신 버전을 권장합니다.');
+    if (!('showOpenFilePicker' in window) || !('showSaveFilePicker' in window)) {
+      alert('이 기능은 Chrome/Edge 최신 버전에서만 지원됩니다.');
       return;
     }
+
+    const useOpen = confirm('기존 백업 파일에서 불러오시겠습니까?\n[확인: 불러오기]  [취소: 새 파일 만들기]');
+
     try{
-      const now=new Date();
-      const stamp=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      if (useOpen) {
+        const [handle] = await window.showOpenFilePicker({
+          multiple: false,
+          types: [{ description: 'JSON', accept: { 'application/json':['.json'] } }]
+        });
+        backupFileHandle = handle;
+
+        const file = await backupFileHandle.getFile();
+        const text = await file.text();
+        if (!text || !text.trim().startsWith('{')) {
+          alert('선택한 파일이 비어 있거나 형식이 올바르지 않습니다.');
+          return;
+        }
+
+        const loaded = JSON.parse(text);
+        if (loaded && (loaded.customers || loaded.productList || loaded.holidays || loaded.mealGroups || loaded.mealNotes)) {
+          setAppState(loaded);
+          rehydrateUI();
+          localStorage.setItem(LS_BACKUP_WANTED_KEY,'1');
+          updateBackupUI(true);
+          document.getElementById('backupReconnect')?.classList.remove('show');
+          showToast('백업 파일에서 데이터를 불러왔습니다.');
+        } else {
+          alert('백업 JSON 형식이 올바르지 않습니다.');
+        }
+        return;
+      }
+
+      const now = new Date();
+      const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
       backupFileHandle = await window.showSaveFilePicker({
         suggestedName: `도시락_백업_${stamp}.json`,
         types: [{ description:'JSON', accept:{ 'application/json':['.json'] } }]
       });
+
       await writeBackupToFile();
+
       localStorage.setItem(LS_BACKUP_WANTED_KEY,'1');
       updateBackupUI(true);
-      showToast('자동 백업 파일이 설정되었습니다.');
       document.getElementById('backupReconnect')?.classList.remove('show');
-    }catch(e){
+      showToast('새 백업 파일을 만들고 연결했습니다.');
+    } catch(e){
       if (e && e.name === 'AbortError') return;
-      alert('백업 파일 지정 실패: ' + (e?.message||e));
+      alert('백업 파일 지정 실패: ' + (e?.message || e));
     }
   }
   function updateBackupUI(connected){
@@ -1499,7 +1713,6 @@
     if(assignBtn) assignBtn.onclick = chooseBackupFile;
   }
 
-  // JPG 저장(청구서 섹션별)
   async function saveInvoiceAsJPG(){
     const area = document.getElementById('invoicePopupArea');
     const sections = area.querySelectorAll('.invoice-popup-cust');
@@ -1539,7 +1752,7 @@
     }
   });
 
-  /* 자동 저장 디바운스: 주요 변경 함수 래핑 */
+  /* 자동 저장 래핑 */
   const _saveModalSchedule_orig = saveModalSchedule; saveModalSchedule = function(){ _saveModalSchedule_orig(); touchSave(); };
   const _addProductRow = addProductRow; addProductRow = function(){ _addProductRow(); touchSave(); };
   const _delProductRow = delProductRow; delProductRow = function(i){ _delProductRow(i); touchSave(); };
@@ -1550,17 +1763,13 @@
   const _toggleVat = toggleVat; toggleVat = function(){ _toggleVat(); touchSave(); };
   const _changeProdToDate = changeProdToDate; changeProdToDate = function(type, useWeekdays){ _changeProdToDate(type, useWeekdays); touchSave(); };
   const _removeProdFromDate = removeProdFromDate; removeProdFromDate = function(type){ _removeProdFromDate(type); touchSave(); };
-  const _applyWarehousePick = applyWarehousePick; applyWarehousePick = function(gi, ds, cat){ _applyWarehousePick(gi, ds, cat); touchSave(); };
+  const _applySavedMenu = applySavedMenu; applySavedMenu = function(gi, ds, idx){ _applySavedMenu(gi, ds, idx); touchSave(); };
   const _savePickerQuick = savePickerQuick; savePickerQuick = function(gi, ds){ _savePickerQuick(gi, ds); touchSave(); };
   const _clearMealCell = clearMealCell; clearMealCell = function(gi, ds){ _clearMealCell(gi, ds); touchSave(); };
   const _addMealGroup = addMealGroup; addMealGroup = function(){ _addMealGroup(); touchSave(); };
   const _renameMealGroup = renameMealGroup; renameMealGroup = function(i){ _renameMealGroup(i); touchSave(); };
-  const _whAddCategory = whAddCategory; whAddCategory = function(gi){ _whAddCategory(gi); touchSave(); };
-  const _whDeleteCategory = whDeleteCategory; whDeleteCategory = function(gi, cat){ _whDeleteCategory(gi, cat); touchSave(); };
-  const _whUpdateMenu = whUpdateMenu; whUpdateMenu = function(gi, cat, val){ _whUpdateMenu(gi, cat, val); touchSave(); };
-  const _applyHolidayRetroactively = applyHolidayRetroactively; applyHolidayRetroactively = function(ds){ _applyHolidayRetroactively(ds); touchSave(); };
-  const _addCustomer = addCustomer; addCustomer = function(){ _addCustomer(); touchSave(); };
-
+  const _addSavedMenu = addSavedMenu; addSavedMenu = function(gi, text){ const r=_addSavedMenu(gi, text); renderWarehouseColumns(); touchSave(); return r; };
+  const _deleteSavedMenu = deleteSavedMenu; deleteSavedMenu = function(gi, idx){ _deleteSavedMenu(gi, idx); touchSave(); };
   window.addEventListener('beforeunload', saveLocalImmediate);
   </script>
 </body>
